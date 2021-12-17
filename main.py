@@ -4,9 +4,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
+from pycoingecko import CoinGeckoAPI
+
 #uvicorn main:app --reload
 
 app = FastAPI()
+cg = CoinGeckoAPI()
 
 origins = ["*", "http://localhost:3000/"]
 
@@ -19,7 +22,11 @@ app.add_middleware(
 )
 
 main_net = 'https://rpc.s0.t.hmny.io'
-#test_address = "one1se7lv0g7athe8xzz2rmckj7c83cx2twwks52kj"
+#test_address = one1se7lv0g7athe8xzz2rmckj7c83cx2twwks52kj
+#test_address = 0xa8c5115c8e44351b2bc2d401a1f033bb45129dc5
+#{'id': 'defi-kingdoms', 'symbol': 'jewel', 'name': 'DeFi Kingdoms'}
+#{'id': 'harmony', 'symbol': 'one', 'name': 'Harmony'}
+#1629518400
 
 dfk_contracts = {
     "UniswapV2Factory"            : "one1jq2tjdcxnyvt6vvlsr5t8w629nm04f0hfepala",
@@ -77,10 +84,22 @@ def getTxType(tx):
     return ""
 
 def getValueJewel(tx):
-    return ""
+    return 0
 
-def getValueUSD(tx):
-    return ""
+def convertUSD(valueOne, valueJewel, onePrice, jewelPrice, timestamp, gasPaid):
+    valueUSD = 0
+    gasUSD = 0
+    for i in onePrice["prices"]:
+        if i[0]>timestamp*1000:
+            valueUSD = valueUSD + i[1]*valueOne
+            gasUSD = i[1]*gasPaid
+            break
+    for i in jewelPrice["prices"]:
+        if i[0]>timestamp*1000:
+            valueUSD = valueUSD + i[1]*valueJewel
+            break
+    return [round(valueUSD, 3), round(gasUSD, 5)]
+
 
 def getDelta(tx):
     return ""
@@ -91,20 +110,29 @@ def totalGasPaid(txs_history):
         gasPaid = gasPaid + value[1]["gasPaid"]
     return round(gasPaid, 5)
 
+def totalGasPaidUsd(txs_history):
+    gasPaid = 0
+    for value in txs_history.items():
+        gasPaid = gasPaid + value[1]["gasPaidUSD"]
+    return round(gasPaid, 5)
+
 def generate_metadata(txs_history):
     totalGasPaidOne = totalGasPaid(txs_history)
+    totalGasPaidUSD = totalGasPaidUsd(txs_history)
 
     metadata = {
         "totalBalanceOne" : "",
         "totalBalanceUSD" : "", 
         "totalGasPaidOne" : totalGasPaidOne,
-        "totalGasPaidUSD" : ""
+        "totalGasPaidUSD" : totalGasPaidUSD
     }
     return metadata
 
-def generate_report(address, startTime, endTime):
+def generate_report(address, startTime, endTime, currency):
+    onePrice = cg.get_coin_market_chart_range_by_id("harmony", currency, startTime, datetime.timestamp(datetime.now()))
+    jewelPrice = cg.get_coin_market_chart_range_by_id("defi-kingdoms", currency, startTime, datetime.timestamp(datetime.now()))
     txs_history = {}
-    txs = account.get_transaction_history(address, page=0, page_size=10, include_full_tx=False, tx_type='ALL', order='DESC', endpoint=main_net)
+    txs = account.get_transaction_history(address, page=0, page_size=1000, include_full_tx=False, tx_type='ALL', order='DESC', endpoint=main_net)
     c=0
     for tx_hash in txs:
 
@@ -128,9 +156,11 @@ def generate_report(address, startTime, endTime):
         txData["txType"] = getTxType(tx)
         txData["valueOne"] = round(int(tx["value"], 16)/(10**18), 3)
         txData["valueJewel"] = getValueJewel(tx)
-        txData["valueUSD"] = getValueUSD(tx)
-        txData["delta"] = getDelta(tx)
         txData["timestamp"] = int(tx["timestamp"], 16)
+        USDvalues = convertUSD(txData["valueOne"], txData["valueJewel"], onePrice, jewelPrice, txData["timestamp"], txData["gasPaid"])
+        txData["valueUSD"] = USDvalues[0]
+        txData["gasPaidUSD"] = USDvalues[1]
+        txData["delta"] = getDelta(tx)
         txs_history[c] = txData
         c+=1
     metadata = generate_metadata(txs_history)
@@ -140,10 +170,12 @@ class Data(BaseModel):
     address: str
     startTime: int
     endTime: int
+    currency: str
+
 
 @app.post("/")
 async def main(data: Data):
-    return generate_report(data.address, data.startTime, data.endTime)
+    return generate_report(data.address, data.startTime, data.endTime, data.currency)
 
 
 

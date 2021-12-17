@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom";
 import DayPickerInput from "react-day-picker/DayPickerInput";
-import { Button, Card, Container, Row, Col , Table} from 'react-bootstrap';
+import { Table, Dropdown } from 'react-bootstrap';
 import axios from 'axios';
 const bootstrap = require('bootstrap')
 const { getAddress } = require('@harmony-js/crypto');
@@ -77,7 +77,7 @@ window.onload = async function initialize() {
 function App() {
     const [currentMenu, setMenu] = useState("mainmenu");
     const [currentAddress, setAddress] = useState("");
-    const[currentStartDay, setStartDay] = useState(0);
+    const[currentStartDay, setStartDay] = useState(1629518400);
     const[currentEndDay, setEndDay] = useState(1000000000000);
 
     return (
@@ -126,6 +126,10 @@ function Menu(props) {
         totalGasPaidOne: "",
         totalGasPaidUSD: "",
     });
+    const[currentCurrency, setCurrency] = useState("usd");
+    const[displayCurrency, setDisplayCurrency] = useState("usd");
+    const[currentContract, setContract] = useState("ALL");
+    
     const[query, setQuery] = useState("");
 
     function handleChange(event) {
@@ -136,6 +140,7 @@ function Menu(props) {
         let harmonyAddress = getAddress(currentValue).bech32;
         props.setAddress(harmonyAddress);
         setQuery([harmonyAddress, props.currentStartDay, props.CurrentEndDay])
+        setDisplayCurrency(currentCurrency)
     }
     function startInput(event) {
         let unixTime = new Date(event).getTime() / 1000
@@ -148,7 +153,7 @@ function Menu(props) {
     }
 
     useEffect(() => {
-        const fetchData = async (address, start, end) => {
+        const fetchData = async (address, start, end, currency) => {
             let txs
             let metadata
             if (props.currentAddress == "") {
@@ -161,7 +166,8 @@ function Menu(props) {
                     data: {
                       address: address,
                       startTime: start,
-                      endTime: end
+                      endTime: end,
+                      currency: currency
                     }
                 });
                 txs = result.data.txs
@@ -170,7 +176,7 @@ function Menu(props) {
             setMetadata(metadata)
             setData(txs)
         }
-        fetchData(props.currentAddress, props.currentStartDay, props.currentEndDay);
+        fetchData(props.currentAddress, props.currentStartDay, props.currentEndDay, currentCurrency);
 
     },[query]);
 
@@ -178,13 +184,25 @@ function Menu(props) {
         return (
             <div className = "menu">
                 <ul >
-                    <div className="center"><h2>Defi Kingdoms Transactions Report</h2></div>
+                    <div className="center"><h2>Defi Kingdoms Transactions Report Generator</h2></div>
                     <br></br>
                     <div className="center">From:</div>
                     <div className="center"><DayPickerInput placeholder="DD/MM/YYYY" format="DD/MM/YYYY" onDayChange={startInput} /></div>
                     <div className="center">To:</div>
                     <div className="center"><DayPickerInput placeholder="DD/MM/YYYY" format="DD/MM/YYYY" onDayChange={endInput}/></div>
                     <br></br>
+                    <div className="center">
+                    <Dropdown>
+                        <Dropdown.Toggle variant="success" id="dropdown-basic">
+                            Currency ({currentCurrency})
+                        </Dropdown.Toggle>
+
+                        <Dropdown.Menu>
+                            <Dropdown.Item onClick={() => setCurrency("usd")}>USD</Dropdown.Item>
+                            <Dropdown.Item onClick={() => setCurrency("eur")}>EUR</Dropdown.Item>
+                        </Dropdown.Menu>
+                    </Dropdown>
+                    </div>
                     <div className="center">
                     <form onSubmit={handleSubmit}>
                       <label>
@@ -194,19 +212,22 @@ function Menu(props) {
                       <input type="submit" value="Submit"/>
                     </form>
                     </div>
+
+
                     <br></br>
                     <div className="center"><h2>Information</h2></div>
+                    <div className="center">Currency values in USD/EUR are calculated from the day that the transaction was made, not with the current values</div>
                     <Table striped bordered hover size="sm" variant="dark" >
                         <thead>
                         <tr>
                             <th>#</th>
                             <th>Value in One</th>
-                            <th>Value in USD</th>
+                            <th>Value in {displayCurrency}</th>
                         </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td> Total Balance</td>
+                                <td> Gains/Losses</td>
                                 <td>{currentMetadata.totalBalanceOne}</td>
                                 <td>{currentMetadata.totalBalanceUSD}</td>
                             </tr>
@@ -219,6 +240,18 @@ function Menu(props) {
                     </Table>
                     <br></br>
                     <div className="center"><h2>Transaction History</h2></div>
+                    <div className="center">it takes a while to make the full report, please be patient</div>
+                    <Dropdown>
+                        <Dropdown.Toggle variant="success" id="dropdown-basic">
+                            Contract Display ({currentContract})
+                        </Dropdown.Toggle>
+
+                        <Dropdown.Menu>
+                            <Dropdown.Item onClick={() => setContract("ALL")}>ALL</Dropdown.Item>
+                            <Dropdown.Item onClick={() => setContract("MasterGardener")}>MasterGardener</Dropdown.Item>
+                            <Dropdown.Item onClick={() => setContract("UniswapV2Router02")}>UniswapV2Router02</Dropdown.Item>
+                        </Dropdown.Menu>
+                    </Dropdown>
                     <Table striped bordered hover size="sm" variant="dark">
                         <thead>
                         <tr>
@@ -228,14 +261,15 @@ function Menu(props) {
                             <th>Transaction Type</th>
                             <th>One</th>
                             <th>Jewel</th>
-                            <th>USD (Conversion)</th>
-                            <th>Balance (USD)</th>
+                            <th>{displayCurrency} (Conversion)</th>
+                            <th>Balance (in {displayCurrency})</th>
                             <th>Gas (in One)</th>
+                            <th>Gas (in {displayCurrency})</th>
                             <th>Date</th>
                         </tr>
                         </thead>
                         <tbody>
-                            {Object.values(currentData).map((_, index) => renderData(_, index))}
+                            {Object.values(currentData).map((_, index) => renderData(_, index, currentContract))}
                         </tbody>
                     </Table>
                     <br></br>
@@ -268,8 +302,17 @@ function Menu(props) {
     }
 }
 
-function renderData(tx, index) {
-    return (
+function renderData(tx, index, contract) {
+    let render
+    if (contract == "ALL") {
+        render = true
+    } else if (contract == tx.contract) {
+        render = true
+    } else {
+        render = false
+    }
+    if (render == true) {
+        return (
         <tr key={index+1}>
             <td>{index+1}</td>
             <td>{tx.chain}</td>
@@ -280,11 +323,11 @@ function renderData(tx, index) {
             <td>{tx.valueUSD}</td>
             <td>{tx.delta}</td>
             <td>{tx.gasPaid}</td>
+            <td>{tx.gasPaidUSD}</td>
             <td>{new Date(tx.timestamp * 1000).toISOString()}</td>
         </tr>
-
-
-    )
+        )
+    } else { return "" }
 }
 
 
