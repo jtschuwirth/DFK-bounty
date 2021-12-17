@@ -2,4 +2,6 @@ node_modules
 no-subir
 examples.txt
 venv
+gulpfile.js
+bs-config.json
 

@@ -14,21 +14,6 @@ const API_URL = "http://127.0.0.1:8000/"
 const HMY_RPC_URL = "https://api.s0.t.hmny.io/"
 const web3 = new Web3(HMY_RPC_URL);
 
-const dfk_contracts = {
-    UniswapV2Factory  : "one1jq2tjdcxnyvt6vvlsr5t8w629nm04f0hfepala",
-    UniswapV2Router02 : "one1yjkky5pdr3jje3mggzq3d8gy394vyresl69pgt",
-    JewelToken        : "one1wt93p34l543ym5r77cyqyl3kd0tfqpy0eyd6n0",
-    xJEWEL            : "one1488gx5rasuk9uynnuaz6hn76sjw65e206pmljg",
-    Bank              : "one1488gx5rasuk9uynnuaz6hn76sjw65e206pmljg",
-    Banker            : "one1x6z7ca022v2zfwlx0kc3upcp82ltjhc7ucgz82",
-    MasterGardener    : "one1mvcxg0r34j0zzgk2qdq76a7sn40en7fy7lytq4",
-    Airdrop           : "one15eudryl7e3nhuym6qrl0ksafenl62vsszleqj2",
-    Profiles          : "one14028gx2gxa937hw4m46entqlsk35etxaln7glh",
-    Hero              : "one1ta6nmn0ekxke427px3npf505w3hadnjuhlh7vv",
-    Gaias_Tears       : "one1yn4q6smd8snq97l7l0n2z6auxpxfv0gyvfd7gr",
-    DFK_Gold          : "one18f8deue39azw7qn6elvvyyuz55jejdh8xdfdw2"
-}
-
 const DUMMY_DATA = [
 {blockHash: '0x85b8aeb7ac7fe749c39f0a9d01925a4d97967d46274d066b9d7a3d331fab4ea3', blockNumber: '0x138a61f', ethHash: '0xf8f25c8c7fd376a6ad8e60bce52aa53d995db2b4591756d19ccf80660051704b', from: 'one1se7lv0g7athe8xzz2rmckj7c83cx2twwks52kj', gas: '0x5208', gasPrice: '0x2540be400', hash: '0x775a2d098197824197d0e023fd5a086818e152367afe36e539b22b559cac79ae', input: '0x', nonce: '0x74', r: '0x1c93d5839962b711852d08e773731ad21f7952b1354bd1436b334c206e0321c9', s: '0x2f7bcb72ef112fa40c4c88bb5b6e96cde3b8e584a899d3132e56c62df29f3885', shardID: 0, timestamp: '0x61b8fb28', to: 'one103gdq8rm5rk7sd4a5mdv3z549ue9w4hrewyhu6', toShardID: 0, transactionIndex: '0x15', v: '0xc6ac98a3', value: '0x429d069189e0000'},
 {blockHash: '0x2c66987bc3cb4e5281f04f7dcc2c2468ae4152a725f70679c89386be86f7ac5d', blockNumber: '0x137e96c', ethHash: '0xcd5a9c8ba2c7058e67797cf33b4e1af3459b26ad01553f921fbf3b159ecc299e', from: 'one1se7lv0g7athe8xzz2rmckj7c83cx2twwks52kj', gas: '0x7eacf', gasPrice: '0x2540be400', hash: '0x689dd4b9d1fbe5904c83ea1560d0baf8bae09aaedfda95a08b3392d83d656ac6', input: '0x8dbdbe6d0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000054f5e288bf391da0000000000000000000000000000000000000000000000000000000000000000', nonce: '0x73', r: '0xa5c9c7327b1a0f8992d1cbbbe84cc6daf5696aa22c07df4df3b639ea6c282e4d', s: '0x715bd3db807feb4c54af4bc29512e3c76bd6cda3e24aada4dd33e63d2c2c3b0e', shardID: 0, timestamp: '0x61b76320', to: 'one1mvcxg0r34j0zzgk2qdq76a7sn40en7fy7lytq4', toShardID: 0, transactionIndex: '0x12', v: '0xc6ac98a3', value: '0x0'},
@@ -40,33 +25,6 @@ const DUMMY_DATA = [
 {blockHash: '0xbd5dcf7d2f12726e3dc353352485cb292a377c9ffcad2a56a2750acb7b572824', blockNumber: '0x1374ec1', ethHash: '0x3974bb87962071c74ad093c05025f991a93323415ffbeae89d55553ae5f29820', from: 'one1se7lv0g7athe8xzz2rmckj7c83cx2twwks52kj', gas: '0x39ec8', gasPrice: '0x2540be400', hash: '0xcd5caffbb1d287c084bf5ffefb83380f92800b6995c590ce3973519d92292e60', input: '0xf305d71900000000000000000000000072cb10c6bfa5624dd07ef608027e366bd690048f00000000000000000000000000000000000000000000000002887c6bb93c963900000000000000000000000000000000000000000000000002853e5bd330c38d0000000000000000000000000000000000000000000000005f0c3bf50707b216000000000000000000000000867df63d1eeaef93984250f78b4bd83c70652dce0000000000000000000000000000000000000000000000000000000061b61bb6', nonce: '0x6d', r: '0x2320795e04ab5cc250f65077b95d6050b7317deacacddae99bd01059c6f9eb1f', 's': '0x6c95bbd87466732a8fe068ad2de0b62a1e657b33f11b5af8442fc537870529d4', shardID: 0, timestamp: '0x61b6172b', to: 'one1yjkky5pdr3jje3mggzq3d8gy394vyresl69pgt', toShardID: 0, transactionIndex: '0x6', v: '0xc6ac98a4', value: '0x5f8681b9cbe3b6d8'},
 {blockHash: '0x715093d229fdf6aa04b5fc77b6f2d4d3be42819f77e4523990098a10d035c576', blockNumber: '0x1374eaf', ethHash: '0x5ba82b27e69459e28bb5f0120ba5955e6921a93a3988007fef56bd4595c1dfb6', from: 'one1se7lv0g7athe8xzz2rmckj7c83cx2twwks52kj', gas: '0x25de2', gasPrice: '0x2540be400', hash: '0x197933bf848e202071e83ca216e67311ef245a18e450ac485815b2f2d3c77c15', input: '0x7ff36ab5000000000000000000000000000000000000000000000000008c1f71ac62d34f0000000000000000000000000000000000000000000000000000000000000080000000000000000000000000867df63d1eeaef93984250f78b4bd83c70652dce0000000000000000000000000000000000000000000000000000000061b61b8b0000000000000000000000000000000000000000000000000000000000000002000000000000000000000000cf664087a5bb0237a0bad6742852ec6c8d69a27a00000000000000000000000072cb10c6bfa5624dd07ef608027e366bd690048f', nonce: '0x6c', r: '0x849a22b3132d2a5d4fdd5eeed502e60e52fb68a9685d6a789ec376b7fa047ad6', s: '0x5b38cd655741b47568a50bc21103adeff5fc19217edf1f8464b22374268e0130', shardID: 0, timestamp: '0x61b61704', to: 'one1yjkky5pdr3jje3mggzq3d8gy394vyresl69pgt', toShardID: 0, transactionIndex: '0x8', v: '0xc6ac98a3', value: '0x14d1120d7b160000'},
 ]
-
-const txData = {
-    chain      : "Harmony",
-    hash       : "",
-    from       : "",
-    to         : "",
-    gasPaid    : 3000,
-    contract   : "",
-    txType     : "",
-    valueOne   : 3000,
-    valueJewel : 3000,
-    valueUSD   : 3000,
-    delta      : "",
-    timestamp  : "126524364", // in unix
-}
-
-const metaData = {
-    totalGasPaidOne    : "",
-    totalGasPaidUSD    : "",
-    totalBalanceOne    : "",
-    totalBalanceUSD    : "",
-    actualOneBalance   : "",
-    actualJewelBalance : "",
-}
-
-const DUMMY = [txData]
-
 
 window.onload = async function initialize() {
     ReactDOM.render(
@@ -122,9 +80,9 @@ function Menu(props) {
     const[currentData, setData] = useState([]);
     const[currentMetadata, setMetadata] = useState({
         totalBalanceOne: "",
-        totalBalanceUSD: "",
+        totalBalanceCurrency: "",
         totalGasPaidOne: "",
-        totalGasPaidUSD: "",
+        totalGasPaidCurrency: "",
     });
     const[currentCurrency, setCurrency] = useState("usd");
     const[displayCurrency, setDisplayCurrency] = useState("usd");
@@ -229,12 +187,12 @@ function Menu(props) {
                             <tr>
                                 <td> Gains/Losses</td>
                                 <td>{currentMetadata.totalBalanceOne}</td>
-                                <td>{currentMetadata.totalBalanceUSD}</td>
+                                <td>{currentMetadata.totalBalanceCurrency}</td>
                             </tr>
                             <tr>
                                 <td>Total Gas Paid</td>
                                 <td>{currentMetadata.totalGasPaidOne}</td>
-                                <td>{currentMetadata.totalGasPaidUSD}</td>
+                                <td>{currentMetadata.totalGasPaidCurrency}</td>
                             </tr>
                         </tbody>
                     </Table>
@@ -250,6 +208,8 @@ function Menu(props) {
                             <Dropdown.Item onClick={() => setContract("ALL")}>ALL</Dropdown.Item>
                             <Dropdown.Item onClick={() => setContract("MasterGardener")}>MasterGardener</Dropdown.Item>
                             <Dropdown.Item onClick={() => setContract("UniswapV2Router02")}>UniswapV2Router02</Dropdown.Item>
+                            <Dropdown.Item onClick={() => setContract("Quest")}>Quest</Dropdown.Item>
+                            <Dropdown.Item onClick={() => setContract("MeditationCircle")}>MeditationCircle</Dropdown.Item>
                         </Dropdown.Menu>
                     </Dropdown>
                     <Table striped bordered hover size="sm" variant="dark">
@@ -320,10 +280,10 @@ function renderData(tx, index, contract) {
             <td>{tx.txType}</td>
             <td>{tx.valueOne}</td>
             <td>{tx.valueJewel}</td>
-            <td>{tx.valueUSD}</td>
+            <td>{tx.valueCurrency}</td>
             <td>{tx.delta}</td>
             <td>{tx.gasPaid}</td>
-            <td>{tx.gasPaidUSD}</td>
+            <td>{tx.gasPaidCurrency}</td>
             <td>{new Date(tx.timestamp * 1000).toISOString()}</td>
         </tr>
         )
