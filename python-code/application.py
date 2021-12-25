@@ -233,7 +233,7 @@ def getTxType(tx, contract_name, txData, address, currency):
             elif contract_name == "WishingWell":
                 return {"event": "Started Wishing Well Quest"}
             else:
-                return {"error": "Failed Receipt"}
+                return {"event": "Failed Receipt"}
         if contract_name == "MeditationCircle":
             decode = decodeMeditationCircle(contract_result, contract, receipt)
             return decode
@@ -267,9 +267,9 @@ def getTxType(tx, contract_name, txData, address, currency):
         else:
             result = contract_result
             print("Missing Contract decode", contract_name, result)
-            return {"error": "Missing Contract decode"}
+            return {"event": "Missing Contract decode"}
     else:
-        return {"error": "Missing Contract ABI"}
+        return {"event": "Missing Contract ABI"}
 
 def decodeItem(result, contract, receipt, name):
     decode = ""
@@ -552,7 +552,7 @@ def decodeQuest(result, contract, receipt, txData, currency):
     return decode
 
 def decodeUniswap(result, txData):
-    decode = {}
+    decode = ""
     liquidity = False
     contract = False
     if str(result[0]) == "<Function addLiquidityETH(address,uint256,uint256,uint256,address,uint256)>":
@@ -586,7 +586,6 @@ def decodeUniswap(result, txData):
         }
         liquidity = True
     elif str(result[0]) == "<Function removeLiquidity(address,address,uint256,uint256,uint256,address,uint256)>":
-        print(result)
         if result[1]["tokenA"] in dfk_contractsETH:
             tokenA = dfk_contractsETH[result[1]["tokenA"]]
         else:
@@ -604,7 +603,6 @@ def decodeUniswap(result, txData):
         }
         liquidity = True
     elif str(result[0]) == "<Function removeLiquidityETH(address,uint256,uint256,uint256,address,uint256)>":
-        print(result)
         if result[1]["token"] in dfk_contractsETH:
             token = dfk_contractsETH[result[1]["token"]]
         else:
@@ -724,8 +722,9 @@ def decodeUniswap(result, txData):
             "soldAmount"   : amountInMax
         }
 
-    if decode == {}:
-        print(result)
+    if decode == "":
+        print("decodeUniswap", result)
+        decode = {"event": "Transaction Failed"}
     return decode
 
 def generate_report(address, startTime, endTime, currency, page):
