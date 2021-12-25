@@ -266,3 +266,21 @@ def convert_one_to_hex(addr):
     buf = convertbits(data, 5, 8, False)
     address = '0x' + ''.join('{:02x}'.format(x) for x in buf)
     return to_checksum_address(address)
+
+def getBalanceChange(transaction_info, gas_paid):
+    balanceChange = {}
+    if transaction_info["event"] == "Quest Completed":
+        balanceChange = {
+            "Currency": transaction_info["balanceChange"] - gas_paid
+        }
+        for key, quantity in transaction_info["rewards"].items():
+            balanceChange[key] = quantity
+
+    elif transaction_info["event"] == "Trade":
+        balanceChange = {
+            "Currency": 0 - gas_paid
+        }
+        balanceChange[ transaction_info["sold"] ] = transaction_info["soldAmount"]
+        balanceChange[ transaction_info["bought"] ] = transaction_info["boughtAmount"]
+    
+    return balanceChange

@@ -14,7 +14,8 @@ from utils import (
     convertUSDtoEUR,
     getLastValueItemtoCurrency,
     getValueJeweltoCurrency,
-    getValueOnetoCurrency
+    getValueOnetoCurrency,
+    getBalanceChange
 )
 
 import json
@@ -289,6 +290,11 @@ def decodeItem(result, contract, receipt, name):
                 "event" : "Approved for Trade",
                 "item"  : name
             }
+        elif result[1]["to"] == "0x65DEA93f7b886c33A78c10343267DD39727778c2":
+            decode = {
+                "event" : "Approved for Summoning",
+                "item"  : name
+            }
     if decode == "":
         print(result)
         decode = {"event": "Transaction Failed"}
@@ -299,19 +305,28 @@ def decodeJewel(result):
     if str(result[0]) == "<Function approve(address,uint256)>":
         if result[1]["spender"] == "0x0594D86b2923076a2316EaEA4E1Ca286dAA142C1":
             decode = {
-                "event" : "Approved for Meditation Circle"
+                "event" : "Approved for Meditation Circle",
+                "item"  : "Jewel"
             }
         elif result[1]["spender"] == "0xA9cE83507D872C5e1273E745aBcfDa849DAA654F":
             decode = {
-                "event" : "Approved for Bank"
+                "event" : "Approved for Bank",
+                "item"  : "Jewel"
             }
         elif result[1]["spender"] == "0x13a65B9F8039E2c032Bc022171Dc05B30c3f2892":
             decode = {
-                "event" : "Approved for Auction House"
+                "event" : "Approved for Auction House",
+                "item"  : "Jewel"
             }
         elif result[1]["spender"] == "0x24ad62502d1C652Cc7684081169D04896aC20f30":
             decode = {
-                "event" : "Approved for Trade"
+                "event" : "Approved for Trade",
+                "item"  : "Jewel"
+            }
+        elif result[1]["spender"] == "0x65DEA93f7b886c33A78c10343267DD39727778c2":
+            decode = {
+                "event" : "Approved for Summoning",
+                "item"  : "Jewel"
             }
 
     if decode == "":
@@ -435,7 +450,7 @@ def decodeHero(result):
     if str(result[0]) == "<Function setApprovalForAll(address,bool)>":
         if str(result[1]["operator"]) == '0x13a65B9F8039E2c032Bc022171Dc05B30c3f2892':
             decode = {
-                "event": "Approval for auction House"
+                "event": "Approved for auction House"
             }
     if decode == "":
         print("decodeHero", result)
@@ -465,6 +480,7 @@ def decodeQuest(result, contract, receipt, txData, currency):
     decode = ""
     heroes = []
     rewards = {}
+    balanceChange = 0
     if str(result[0]) == "<Function completeQuest(uint256)>":
         receipt_result = contract.events.QuestReward().processReceipt(receipt)
         for i in receipt_result:
@@ -487,6 +503,9 @@ def decodeQuest(result, contract, receipt, txData, currency):
                     price = "Unknown"
                 if currency == "eur":
                     price = convertUSDtoEUR(price)
+                
+                if type(price) != str:
+                    balanceChange += price * quantity
 
                 #Agregar precios a la tabla
                 #print(item, price)
@@ -497,7 +516,8 @@ def decodeQuest(result, contract, receipt, txData, currency):
         decode = {
             "event"    : "Quest Completed", 
             "heroIds"  : heroes, 
-            "rewards"  : rewards
+            "rewards"  : rewards,
+            "balanceChange": balanceChange
             }
     elif str(result[0]) == "<Function startQuest(uint256[],address,uint8)>":
         if str(result[1]["_questAddress"]) == '0x0548214A0760a897aF53656F4b69DbAD688D8f29':
@@ -583,6 +603,20 @@ def decodeUniswap(result, txData):
             "amountB": round(result[1]['amountBMin']/(10**18), 3),
         }
         liquidity = True
+    elif str(result[0]) == "<Function removeLiquidityETH(address,uint256,uint256,uint256,address,uint256)>":
+        print(result)
+        if result[1]["token"] in dfk_contractsETH:
+            token = dfk_contractsETH[result[1]["token"]]
+        else:
+            token = result[1]["token"]
+
+        decode = {
+            "event" : "Liquidity One Removed",
+            "amountOne": round(result[1]['amountETHMin']/(10**18), 3),
+            "token" : token,
+            "amountToken": round(result[1]['amountTokenMin']/(10**18), 3),
+        }
+        liquidity = True
     
     if liquidity == False:
         if result[1]["path"][0] in dfk_contractsETH:
@@ -607,7 +641,7 @@ def decodeUniswap(result, txData):
 
         decode = {
             "event"        : "Trade",
-            "bought"       : dfk_contractsETH[result[1]["path"][1]],
+            "bought"       : dfk_contractsETH[result[1]["path"][-1]],
             "boughtAmount" : amountOut,
             "sold"         : dfk_contractsETH[result[1]["path"][0]],
             "soldAmount"   : amountInMax
@@ -623,7 +657,7 @@ def decodeUniswap(result, txData):
             amountIn = result[1]["amountIn"]
         decode = {
             "event"        : "Trade",
-            "bought"       : dfk_contractsETH[result[1]["path"][1]],
+            "bought"       : dfk_contractsETH[result[1]["path"][-1]],
             "boughtAmount" : amountOutMin,
             "sold"         : dfk_contractsETH[result[1]["path"][0]],
             "soldAmount"   : amountIn
@@ -636,9 +670,9 @@ def decodeUniswap(result, txData):
             amountOutMin = result[1]["amountOutMin"]
         decode = {
             "event"        : "Trade",
-            "bought"       : dfk_contractsETH[result[1]["path"][1]],
+            "bought"       : dfk_contractsETH[result[1]["path"][-1]],
             "boughtAmount" : amountOutMin,
-            "sold"         : "One",
+            "sold"         : dfk_contractsETH[result[1]["path"][0]],
             "soldAmount"   : round(txData["valueOne"], 3)
         }
 
@@ -649,9 +683,9 @@ def decodeUniswap(result, txData):
             amountOut = result[1]["amountOut"]
         decode = {
             "event"        : "Trade",
-            "bought"       : dfk_contractsETH[result[1]["path"][1]],
+            "bought"       : dfk_contractsETH[result[1]["path"][-1]],
             "boughtAmount" : round(amountOut, 3),
-            "sold"         : "One",
+            "sold"         : dfk_contractsETH[result[1]["path"][0]],
             "soldAmount"   : round(txData["valueOne"], 3)
         }
 
@@ -667,12 +701,12 @@ def decodeUniswap(result, txData):
 
         decode = {
             "event"        : "Trade",
-            "bought"       : dfk_contractsETH[result[1]["path"][1]],
+            "bought"       : dfk_contractsETH[result[1]["path"][-1]],
             "boughtAmount" : amountOutMin,
             "sold"         : dfk_contractsETH[result[1]["path"][0]],
             "soldAmount"   : amountIn
         }
-    elif str(result[0]) == "<Function swapTokenForExactETH(uint256,uint256,address[],address,uint256)>":
+    elif str(result[0]) == "<Function swapTokensForExactETH(uint256,uint256,address[],address,uint256)>":
         if result[1]["amountInMax"] > 10**12:
             amountInMax = round(result[1]["amountInMax"]/(10**18), 3)
         else:
@@ -684,7 +718,7 @@ def decodeUniswap(result, txData):
 
         decode = {
             "event"        : "Trade",
-            "bought"       : dfk_contractsETH[result[1]["path"][1]],
+            "bought"       : dfk_contractsETH[result[1]["path"][-1]],
             "boughtAmount" : amountOut,
             "sold"         : dfk_contractsETH[result[1]["path"][0]],
             "soldAmount"   : amountInMax
@@ -698,6 +732,12 @@ def generate_report(address, startTime, endTime, currency, page):
     txs_history = {}
     txs = account.get_transaction_history(address, page=page, page_size=10, include_full_tx=False, tx_type='ALL', order='DESC', endpoint=main_net)
     c=1+page*10
+
+    # balance Sheet debe tener como key los nombres de los items
+    # y como value una tupla cantidad
+    balanceSheet = {}
+
+
     for tx_hash in txs:
         tx = transaction.get_transaction_by_hash(tx_hash, main_net)
         contract_name = DFKContract(tx)
@@ -710,6 +750,8 @@ def generate_report(address, startTime, endTime, currency, page):
         txData = {
             "chain" : "Harmony"
         }
+
+
         txData["hash"] = tx["hash"]
         txData["from"] = tx["from"]
         txData["to"] = tx["to"]
@@ -719,10 +761,14 @@ def generate_report(address, startTime, endTime, currency, page):
         txData["timestamp"] = int(tx["timestamp"], 16)
         txData["txType"] = getTxType(tx, contract_name, txData, address, currency)
         txData["gasPaidCurrency"] = getValueOnetoCurrency(txData["gasPaid"], currency, txData["timestamp"])
-        txData["balanceChange"] = {}
+
+        balanceChange = getBalanceChange(txData["txType"], txData["gasPaidCurrency"])
+
+        txData["balanceChange"] = balanceChange
         txs_history[c] = txData
         c+=1
-    balanceSheet = {}
+
+
     return {"txs": txs_history, "balanceSheet": balanceSheet}
 
 def getBalances(address, currency):
