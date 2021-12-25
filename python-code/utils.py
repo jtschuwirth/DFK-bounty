@@ -267,20 +267,63 @@ def convert_one_to_hex(addr):
     address = '0x' + ''.join('{:02x}'.format(x) for x in buf)
     return to_checksum_address(address)
 
-def getBalanceChange(transaction_info, gas_paid):
+def getBalanceChange(transaction_info, timestamp, currency):
     balanceChange = {}
     if transaction_info["event"] == "Quest Completed":
         balanceChange = {
-            "Currency": transaction_info["balanceChange"] - gas_paid
+            "Currency": transaction_info["balanceChange"] 
         }
         for key, quantity in transaction_info["rewards"].items():
             balanceChange[key] = quantity
 
+
+    elif transaction_info["event"] == "Claim LP rewards":
+        gains = getValueJeweltoCurrency(
+            transaction_info["unlockedAmount"], 
+            currency, 
+            timestamp)
+        balanceChange = {
+            "Currency": gains ,
+            "Jewel": transaction_info["unlockedAmount"]
+        }
+
+    
     elif transaction_info["event"] == "Trade":
         balanceChange = {
-            "Currency": 0 - gas_paid
+            "Currency": 0 ,
+            transaction_info["sold"]: -1 * transaction_info["soldAmount"],
+            transaction_info["bought"]: transaction_info["boughtAmount"]
         }
-        balanceChange[ transaction_info["sold"] ] = transaction_info["soldAmount"]
-        balanceChange[ transaction_info["bought"] ] = transaction_info["boughtAmount"]
+
+    elif transaction_info["event"] == "Create Auction":
+        if transaction_info["status"] != "sold":
+            return { "Currency": 0 }
+        
+        gains = getValueJeweltoCurrency(
+            transaction_info["price"], 
+            currency, 
+            timestamp)
+        balanceChange = {
+            "Currency":  gains,
+            "Jewel": transaction_info["price"]
+        }
+
+    elif transaction_info["event"] == "Bought Hero":
+        
+        gains = getValueJeweltoCurrency(
+            transaction_info["price"], 
+            currency, 
+            timestamp)
+        balanceChange = {
+            "Currency": -1*gains,
+            "Jewel": -1*transaction_info["price"]
+        }
+
+    elif transaction_info["event"] == "Summon Crystal":
+
+        balanceChange = {
+            "Currency": 0,
+            "Tears": -1*transaction_info["summonerTears"] - transaction_info["assistantTears"]
+        }
     
     return balanceChange

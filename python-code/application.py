@@ -5,6 +5,7 @@ from pycoingecko import CoinGeckoAPI
 from eth_utils import to_checksum_address
 from flask import Flask, request
 from flask_cors import CORS
+from collections import defaultdict
 
 from utils import (
     convert_one_to_hex,
@@ -734,7 +735,7 @@ def generate_report(address, startTime, endTime, currency, page):
 
     # balance Sheet debe tener como key los nombres de los items
     # y como value una tupla cantidad
-    balanceSheet = {}
+    balanceSheet = defaultdict(int)
 
 
     for tx_hash in txs:
@@ -761,11 +762,17 @@ def generate_report(address, startTime, endTime, currency, page):
         txData["txType"] = getTxType(tx, contract_name, txData, address, currency)
         txData["gasPaidCurrency"] = getValueOnetoCurrency(txData["gasPaid"], currency, txData["timestamp"])
 
-        balanceChange = getBalanceChange(txData["txType"], txData["gasPaidCurrency"])
+        balanceChange = getBalanceChange(txData["txType"], txData["timestamp"], currency)
+        balanceChange["Currency"] -= txData["gasPaidCurrency"]
 
         txData["balanceChange"] = balanceChange
         txs_history[c] = txData
         c+=1
+
+        for key, value in balanceChange:
+            balanceSheet[key] += value
+
+
 
 
     return {"txs": txs_history, "balanceSheet": balanceSheet}
