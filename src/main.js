@@ -3,6 +3,7 @@ import ReactDOM from "react-dom";
 import DayPickerInput from "react-day-picker/DayPickerInput";
 import { Table, Dropdown } from 'react-bootstrap';
 import axios from "axios";
+import cloneDeep from 'lodash/cloneDeep';
 const bootstrap = require('bootstrap')
 const { getAddress } = require('@harmony-js/crypto');
 
@@ -62,7 +63,6 @@ function NavBar(props) {
 function Menu(props) {
     const[currentValue, setValue] = useState("");
     const[currentData, setData] = useState([]);
-    const[currentMetadata, setMetadata] = useState([]);
     const[currentCurrency, setCurrency] = useState("usd");
     const[displayCurrency, setDisplayCurrency] = useState("usd");
     const[currentContract, setContract] = useState("ALL");
@@ -84,6 +84,7 @@ function Menu(props) {
         setDisplayCurrency(currentCurrency)
         setData([]);
         setCurrentBalance([]);
+        setSheet([]);
     }
     function startInput(event) {
         let unixTime = new Date(event).getTime() / 1000
@@ -117,7 +118,7 @@ function Menu(props) {
                     }
                 }
                 setCurrentBalance(balance)
-                for (let i = 0; i<10; i++) {
+                for (let i = 0; i<20; i++) {
                     const result = await axios.post(API_URL+"transactionReport", {
                         address   : address,
                         startTime : start,
@@ -126,17 +127,26 @@ function Menu(props) {
                         page      : i
                     })
                     txs = result.data.txs;
-                    balanceSheet = result.data.balanceSheet;
-                    if (currentData.toString() == "[]"){
-                        setData([txs]);
-                    } else{
-                        setData(currentData => [...currentData, txs]);
+                    setData(currentData => [...currentData, txs]);
+                    for (let i = 0; i<Object.keys(result.data.balanceSheet).length; i++) {
+                        let logrado = false;
+                        let name = Object.keys(result.data.balanceSheet)[i];
+                        let value = Object.values(result.data.balanceSheet)[i];
+                        currentSheet.map((_) => balanceSheet.push(_));
+                        for (let j in balanceSheet) {
+                            console.log(balanceSheet[j])
+                            if (balanceSheet[j][0].toString() == name.toString()) {
+                                console.log("logrado")
+                                balanceSheet[j] = [name, balanceSheet[j][1]+value];
+                                logrado = true;
+                                break
+                            }
+                        }
+                        if (logrado == false) {
+                            balanceSheet.push([name, value]);
+                        }
                     }
-                    if (currentSheet.toString() == "[]"){
-                        setSheet(balanceSheet);
-                    } else{
-                        setSheet(balanceSheet);
-                    }
+                    setSheet([...balanceSheet])
                 }
                 setLoading(false);
             }
@@ -207,17 +217,13 @@ function Menu(props) {
                         <thead>
                         <tr>
                             <th>#</th>
-                            {Object.keys(currentSheet).map((_, index) => renderCurrentSheetTitle(_, index))}
+                            {currentSheet.map((_, index) => renderCurrentSheetTitle(_, index))}
                         </tr>
                         </thead>
                         <tbody>
                             <tr>
                                 <td> Change in timeframe</td>
-                                {Object.values(currentSheet).map((_, index) => renderCurrentSheetQuantity(_, index))}
-                            </tr>
-                            <tr>
-                                <td>value ({displayCurrency}) when Obtained</td>
-                                {Object.values(currentSheet).map((_, index) => renderCurrentSheetValue(_, index))}
+                                {currentSheet.map((_, index) => renderCurrentSheetValue(_, index))}
                             </tr>
                         </tbody>
                     </Table>
@@ -275,21 +281,15 @@ function Menu(props) {
         )
     }
 }
-function renderCurrentSheetTitle(name, index) {
+function renderCurrentSheetTitle(tupla, index) {
     return (
-        <th>{name}</th>
+        <th>{tupla[0]}</th>
     )
 }
 
 function renderCurrentSheetValue(tupla, index) {
     return (
         <th>{tupla[1]}</th>
-    )
-}
-
-function renderCurrentSheetQuantity(tupla, index) {
-    return (
-        <th>{tupla[0]}</th>
     )
 }
 
@@ -327,9 +327,9 @@ function renderData(tx, index, contract) {
             <td>{tx.chain}</td>
             <td>{tx.contract}</td>
             <td>{txInfo}</td>
-            <td>Falta Agregar</td>
-            <td>Falta Agregar</td>
-            <td>Falta Agregar</td>
+            <td>{tx.balanceChange.One}</td>
+            <td>{tx.balanceChange.Jewel}</td>
+            <td>{tx.balanceChange.Currency}</td>
             <td>{tx.gasPaid}</td>
             <td>{tx.gasPaidCurrency}</td>
             <td>{new Date(tx.timestamp * 1000).toLocaleDateString("en-US")}</td>
@@ -353,7 +353,7 @@ function decodeTxInfo(info) {
         return [info.event, " of hero: ",info.heroId]
     } else if (info.event == "Add to Bank" || info.event == "Remove from Bank") {
         return [info.event, ": ",info.amount, " ",info.currency]
-    } else if (info.event == "Approved for Bank" || info.event == "Approved for Meditation Circle" || info.event == "Approval for auction House" || info.event == "Transaction Failed" || info.event == "Started New Quest") {
+    } else if (info.event == "Approved for Bank" || info.event == "Approved for Meditation Circle" || info.event == "Approved for Auction House" || info.event == "Transaction Failed" || info.event == "Started New Quest" || info.event == "Approved for Trade" || info.event == "Started Wishing Well Quest") {
         return [info.event]
     } else if (info.event == "Create Renting Auction") {
         return [info.event, " for hero: ",info.heroId, " for ",info.price," ",info.currency]
@@ -369,6 +369,14 @@ function decodeTxInfo(info) {
         return [info.event, ": ", info.unlockedAmount, " Unlocked Amount and ", info.lockedAmount, " Locked Amount"]
     } else if (info.event == "Create Auction") {
         return [info.event, " for hero: ",info.heroId, ", Selling price: ", info.price, " ", info.currency, ", Status: ", info.status]
+    } else if (info.event == "Bought Hero") {
+        return [info.event, ": ",info.heroId, " for ", info.price, " ", info.currency]
+    } else if (info.event == "Summon Crystal") {
+        return [info.event, ": with hero ", info.summonerId, " and assistant: ", info.assistantId, " cost: ",info.summonerTears, "+",info.assistantTears, " Tears"]
+    } else if (info.event == "Crystal Open") {
+        return [info.event, ", received hero: ",info.heroId]
+    } else if (info.event == "Liquidity One Removed") {
+        return [info.event, ": ", info.amountOne, " One and ", info.amountToken, " ", info.token]
     }else {
         return JSON.stringify(info)
     }

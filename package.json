@@ -32,6 +32,7 @@
     "fs": "0.0.1-security",
     "gulp": "^4.0.2",
     "lite-server": "^2.6.1",
+    "lodash": "^4.17.21",
     "react": "^17.0.2",
     "react-bootstrap": "^2.0.3",
     "react-day-picker": "^7.4.10",

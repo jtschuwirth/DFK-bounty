@@ -268,7 +268,7 @@ def convert_one_to_hex(addr):
     return to_checksum_address(address)
 
 def getBalanceChange(transaction_info, timestamp, currency):
-    balanceChange = {}
+    balanceChange = {"Currency": 0}
     if transaction_info["event"] == "Quest Completed":
         balanceChange = {
             "Currency": transaction_info["balanceChange"] 

@@ -453,6 +453,11 @@ def decodeHero(result):
             decode = {
                 "event": "Approved for auction House"
             }
+    elif str(result[0]) == "<Function transferFrom(address,address,uint256)>":
+        decode = {
+            "event": "Transfer Hero",
+            "heroId": result[1]["tokenId"]
+        }
     if decode == "":
         print("decodeHero", result)
         decode = {"event": "Transaction Failed"}
@@ -769,11 +774,8 @@ def generate_report(address, startTime, endTime, currency, page):
         txs_history[c] = txData
         c+=1
 
-        for key, value in balanceChange:
+        for key, value in balanceChange.items():
             balanceSheet[key] += value
-
-
-
 
     return {"txs": txs_history, "balanceSheet": balanceSheet}
 
