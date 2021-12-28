@@ -3,7 +3,6 @@ import ReactDOM from "react-dom";
 import DayPickerInput from "react-day-picker/DayPickerInput";
 import { Table, Dropdown } from 'react-bootstrap';
 import axios from "axios";
-import cloneDeep from 'lodash/cloneDeep';
 const bootstrap = require('bootstrap')
 const { getAddress } = require('@harmony-js/crypto');
 
@@ -247,19 +246,19 @@ function Menu(props) {
                             <Dropdown.Item onClick={() => setContract("MasterGardener")}>Master Gardener</Dropdown.Item>
                             <Dropdown.Item onClick={() => setContract("xJEWEL")}>Bank</Dropdown.Item>
                             <Dropdown.Item onClick={() => setContract("AuctionHouse")}>Auction House</Dropdown.Item>
-                            <Dropdown.Item onClick={() => setContract("	Summoning")}>Summoning</Dropdown.Item>
+                            <Dropdown.Item onClick={() => setContract("Summoning")}>Summoning</Dropdown.Item>
                         </Dropdown.Menu>
                     </Dropdown>
                     <Table striped bordered hover size="sm" variant="dark">
                         <thead>
                         <tr>
                             <th>#</th>
-                            <th>Blockchain</th>
+                            <th>Chain</th>
                             <th>Contract Name</th>
                             <th>Transaction Type</th>
                             <th>Change (One)</th>
                             <th>Change (Jewel)</th>
-                            <th>Change Balance ({displayCurrency})</th>
+                            <th>Change ({displayCurrency})</th>
                             <th>Gas (One)</th>
                             <th>Gas ({displayCurrency})</th>
                             <th>Date</th>
@@ -329,14 +328,13 @@ function renderData(tx, index, contract) {
     } else {
         render = false
     }
-    let txInfo = decodeTxInfo(tx.txType)
     if (render == true) {
         return (
         <tr key={index}>
             <td>{index}</td>
             <td>{tx.chain}</td>
             <td>{tx.contract}</td>
-            <td>{txInfo}</td>
+            <td>{DecodeTxInfo(tx.txType)}</td>
             <td>{tx.balanceChange.One}</td>
             <td>{tx.balanceChange.Jewel}</td>
             <td>{tx.balanceChange.Currency}</td>
@@ -348,13 +346,23 @@ function renderData(tx, index, contract) {
     } else { return "" }
 }
 
-function decodeTxInfo(info) {
+function renderItems(item, quantity) {
+    return (
+        <div><img 
+        src={`src/images/${item.toLowerCase().replace(/\ /g,"_")}.png`} width="30" height="30" ></img>{[item,": ",quantity]}</div>
+    )
+}
+
+function DecodeTxInfo(info) {
     if (info.event == "Quest Completed") {
         return(
-            [info.event, ": with heroes: ", info.heroIds.map((id) => [id, " "])," rewards: ", JSON.stringify(info.rewards)]
+            <div>
+                <div>{[info.event, " with heroes: ", info.heroIds.map((id) => [id, " "])," rewards: "]}</div>
+                {Object.keys(info.rewards).map((_, index) => renderItems(_, Object.values(info.rewards)[index]))}
+            </div>
         )
     } else if (info.event == "Start Fishing Quest" || info.event == "Start Foraging Quest" || info.event == "Start Wishing Well Quest") {
-        return [info.event, ": with heroes: ", info.heroIds.map((id) => [id, " "])]
+        return [info.event, " with heroes: ", info.heroIds.map((id) => [id, " "])]
     } else if (info.event == "Trade") {
         return [info.event, ": Bought ", info.boughtAmount, " ",info.bought, " for ", info.soldAmount, " ", info.sold]
     } else if (info.event == "Sold for Gold") {
