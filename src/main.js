@@ -13,9 +13,9 @@ window.onload = async function initialize() {
         document.getElementById('app'));
 }
 
-const API_URL = "http://192.168.0.30:5000/"
+//const API_URL = "http://192.168.0.30:5000/"
 //const API_URL = "http://localhost:5000/"
-//const API_URL = "https://apidfk.jtschuwirth.xyz/"
+const API_URL = "https://jtschuwirth.xyz/"
 
 function App() {
     const [currentMenu, setMenu] = useState("mainmenu");
@@ -118,7 +118,7 @@ function Menu(props) {
                     }
                 }
                 setCurrentBalance(balance)
-                for (let i = 0; i<20; i++) {
+                for (let i = 0; i<1000; i++) {
                     const result = await axios.post(API_URL+"transactionReport", {
                         address   : address,
                         startTime : start,
@@ -126,6 +126,11 @@ function Menu(props) {
                         currency  : currency,
                         page      : i
                     })
+                    if (result.data.status == "finished") {
+                        break
+                    } else if (result.data.status == "error") {
+                        break
+                    }
                     txs = result.data.txs;
                     setData(currentData => [...currentData, txs]);
                     for (let i = 0; i<Object.keys(result.data.balanceSheet).length; i++) {
@@ -134,9 +139,7 @@ function Menu(props) {
                         let value = Object.values(result.data.balanceSheet)[i];
                         currentSheet.map((_) => balanceSheet.push(_));
                         for (let j in balanceSheet) {
-                            console.log(balanceSheet[j])
                             if (balanceSheet[j][0].toString() == name.toString()) {
-                                console.log("logrado")
                                 balanceSheet[j] = [name, balanceSheet[j][1]+value];
                                 logrado = true;
                                 break
@@ -208,12 +211,13 @@ function Menu(props) {
                             </tr>
                         </tbody>
                     </Table>
+                    <div className="center"><h2>Current Balance value ({displayCurrency}): {currentBalance.reduce((a, b) => a + b[1][1], 0)}</h2></div>
 
                     <br></br>
                     <div className="center"><h2>Gains/Losses in Timeframe</h2></div>
                     <div className="center">Currency values in USD/EUR are calculated from the day that the transaction was made, not with the current values</div>
                     <div className="center">This Table updates when more transactions are fetched</div>
-                    <Table striped bordered hover size="sm" variant="dark" >
+                    <Table striped bordered hover size="sm" variant="dark" responsive>
                         <thead>
                         <tr>
                             <th>#</th>
@@ -229,7 +233,7 @@ function Menu(props) {
                     </Table>
                     <br></br>
                     <div className="center"><h2>Transaction History</h2></div>
-                    <div className="center">Transactions are fetched in batches of 10, it takes a while to make the full report, please be patient</div>
+                    <div className="center">Transactions are fetched in batches of 5, it takes a while to make the full report, please be patient</div>
                     <Dropdown>
                         <Dropdown.Toggle variant="success" id="dropdown-basic">
                             Contract Display ({currentContract})
@@ -281,10 +285,16 @@ function Menu(props) {
         )
     }
 }
-function renderCurrentSheetTitle(tupla, index) {
-    return (
-        <th>{tupla[0]}</th>
-    )
+function renderCurrentSheetTitle(tupla, index, currency) {
+    if (tupla[0] == "Currency") {
+        return (
+            <th>gains/losses</th>
+        )
+    } else {
+        return (
+            <th>{tupla[0]}</th>
+        )
+    }
 }
 
 function renderCurrentSheetValue(tupla, index) {
@@ -340,28 +350,30 @@ function renderData(tx, index, contract) {
 
 function decodeTxInfo(info) {
     if (info.event == "Quest Completed") {
-        return [info.event, ": with heroes: ", info.heroIds.map((id) => [id, " "]), " rewards: ", JSON.stringify(info.rewards)]
-    } else if (info.event == "Start Fishing Quest" || info.event == "Start Foraging Quest" || info.event == "Start Wishing Well Quest" || info.event == "Cancel Quest") {
+        return(
+            [info.event, ": with heroes: ", info.heroIds.map((id) => [id, " "])," rewards: ", JSON.stringify(info.rewards)]
+        )
+    } else if (info.event == "Start Fishing Quest" || info.event == "Start Foraging Quest" || info.event == "Start Wishing Well Quest") {
         return [info.event, ": with heroes: ", info.heroIds.map((id) => [id, " "])]
     } else if (info.event == "Trade") {
         return [info.event, ": Bought ", info.boughtAmount, " ",info.bought, " for ", info.soldAmount, " ", info.sold]
     } else if (info.event == "Sold for Gold") {
         return [info.item, " ",info.event]
-    } else if (info.event == "Deposit LP") {
+    } else if (info.event == "Deposit LP" || info.event == "Withdraw LP") {
         return [info.event, ": ",info.amount]
     } else if (info.event == "Cancel Auction") {
         return [info.event, " of hero: ",info.heroId]
     } else if (info.event == "Add to Bank" || info.event == "Remove from Bank") {
         return [info.event, ": ",info.amount, " ",info.currency]
-    } else if (info.event == "Approved for Bank" || info.event == "Approved for Meditation Circle" || info.event == "Approved for Auction House" || info.event == "Transaction Failed" || info.event == "Started New Quest" || info.event == "Approved for Trade" || info.event == "Started Wishing Well Quest") {
+    } else if (info.event == "Approved for Bank" || info.event == "Approved for Meditation Circle" || info.event == "Approved for Auction House" || info.event == "Transaction Failed" || info.event == "Started New Quest" || info.event == "Approved for Trade" || info.event == "Started Wishing Well Quest" || info.event == "Approved for auction House" || info.event == "Approved for Summoning") {
         return [info.event]
     } else if (info.event == "Create Renting Auction") {
         return [info.event, " for hero: ",info.heroId, " for ",info.price," ",info.currency]
-    } else if (info.event == "Cancel Renting Auction") {
-        return [info.event, " for hero: ",info.heroId]
-    } else if (info.event == "Complete Meditation" || info.event == "Start Meditation") {
+    } else if (info.event == "Cancel Renting Auction" || info.event == "Cancel Quest") {
+        return [info.event, " for hero: ", info.heroId]
+    } else if (info.event == "Complete Meditation") {
         return [info.event, " with hero: ", info.heroId]
-    } else if (info.event == "add Liquidity") {
+    } else if (info.event == "add Liquidity" || info.event == "Liquidity Removed") {
         return [info.event, ": ", info.amountA, " ",info.tokenA, " and ", info.amountB, " ", info.tokenB]
     } else if (info.event == "add Liquidity One") {
         return [info.event, ": ", info.amountOne, " One and ", info.amount, " ", info.token]
@@ -372,11 +384,15 @@ function decodeTxInfo(info) {
     } else if (info.event == "Bought Hero") {
         return [info.event, ": ",info.heroId, " for ", info.price, " ", info.currency]
     } else if (info.event == "Summon Crystal") {
-        return [info.event, ": with hero ", info.summonerId, " and assistant: ", info.assistantId, " cost: ",info.summonerTears, "+",info.assistantTears, " Tears"]
+        return [info.event, ": with hero ", info.summonerId, " and assistant: ", info.assistantId, " cost: ",info.summonerTears+info.assistantTears, " Tears and ", info.amountJewel, " Jewels"]
     } else if (info.event == "Crystal Open") {
         return [info.event, ", received hero: ",info.heroId]
     } else if (info.event == "Liquidity One Removed") {
         return [info.event, ": ", info.amountOne, " One and ", info.amountToken, " ", info.token]
+    } else if (info.event == "Start Meditation") {
+        return [info.event, " with hero: ", info.heroId, " cost: ", info.amountJewel, " Jewels and ", info.amountRune, " ", info.rune]
+    } else if (info.event == "Transfer Hero") {
+        return [info.event, ": ",info.heroId]
     }else {
         return JSON.stringify(info)
     }

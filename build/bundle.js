@@ -114184,10 +114184,11 @@ window.onload = /*#__PURE__*/function () {
   }
 
   return initialize;
-}();
+}(); //const API_URL = "http://192.168.0.30:5000/"
+//const API_URL = "http://localhost:5000/"
 
-var API_URL = "http://192.168.0.30:5000/"; //const API_URL = "http://localhost:5000/"
-//const API_URL = "https://apidfk.jtschuwirth.xyz/"
+
+var API_URL = "https://jtschuwirth.xyz/";
 
 function App() {
   var _useState = (0, _react.useState)("mainmenu"),
@@ -114352,7 +114353,7 @@ function Menu(props) {
                 txs = [];
                 balance = [];
                 balanceSheet = [];
-                _context2.next = 48;
+                _context2.next = 52;
                 break;
 
               case 9:
@@ -114376,8 +114377,8 @@ function Menu(props) {
                 _i = 0;
 
               case 16:
-                if (!(_i < 20)) {
-                  _context2.next = 47;
+                if (!(_i < 1000)) {
+                  _context2.next = 51;
                   break;
                 }
 
@@ -114392,15 +114393,32 @@ function Menu(props) {
 
               case 19:
                 _result = _context2.sent;
+
+                if (!(_result.data.status == "finished")) {
+                  _context2.next = 24;
+                  break;
+                }
+
+                return _context2.abrupt("break", 51);
+
+              case 24:
+                if (!(_result.data.status == "error")) {
+                  _context2.next = 26;
+                  break;
+                }
+
+                return _context2.abrupt("break", 51);
+
+              case 26:
                 txs = _result.data.txs;
                 setData(function (currentData) {
                   return [].concat((0, _toConsumableArray2["default"])(currentData), [txs]);
                 });
                 _i2 = 0;
 
-              case 23:
+              case 29:
                 if (!(_i2 < Object.keys(_result.data.balanceSheet).length)) {
-                  _context2.next = 43;
+                  _context2.next = 47;
                   break;
                 }
 
@@ -114412,51 +114430,49 @@ function Menu(props) {
                 });
                 _context2.t0 = _regenerator["default"].keys(balanceSheet);
 
-              case 29:
+              case 35:
                 if ((_context2.t1 = _context2.t0()).done) {
-                  _context2.next = 39;
+                  _context2.next = 43;
                   break;
                 }
 
                 j = _context2.t1.value;
-                console.log(balanceSheet[j]);
 
                 if (!(balanceSheet[j][0].toString() == name.toString())) {
-                  _context2.next = 37;
+                  _context2.next = 41;
                   break;
                 }
 
-                console.log("logrado");
                 balanceSheet[j] = [name, balanceSheet[j][1] + value];
                 logrado = true;
-                return _context2.abrupt("break", 39);
+                return _context2.abrupt("break", 43);
 
-              case 37:
-                _context2.next = 29;
+              case 41:
+                _context2.next = 35;
                 break;
 
-              case 39:
+              case 43:
                 if (logrado == false) {
                   balanceSheet.push([name, value]);
                 }
 
-              case 40:
+              case 44:
                 _i2++;
-                _context2.next = 23;
+                _context2.next = 29;
                 break;
 
-              case 43:
+              case 47:
                 setSheet((0, _toConsumableArray2["default"])(balanceSheet));
 
-              case 44:
+              case 48:
                 _i++;
                 _context2.next = 16;
                 break;
 
-              case 47:
+              case 51:
                 setLoading(false);
 
-              case 48:
+              case 52:
               case "end":
                 return _context2.stop();
             }
@@ -114536,7 +114552,11 @@ function Menu(props) {
       return renderCurrentBalanceQuantity(_, index);
     })), /*#__PURE__*/_react["default"].createElement("tr", null, /*#__PURE__*/_react["default"].createElement("td", null, " Value in ", displayCurrency), currentBalance.map(function (_, index) {
       return renderCurrentBalanceValue(_, index);
-    })))), /*#__PURE__*/_react["default"].createElement("br", null), /*#__PURE__*/_react["default"].createElement("div", {
+    })))), /*#__PURE__*/_react["default"].createElement("div", {
+      className: "center"
+    }, /*#__PURE__*/_react["default"].createElement("h2", null, "Current Balance value (", displayCurrency, "): ", currentBalance.reduce(function (a, b) {
+      return a + b[1][1];
+    }, 0))), /*#__PURE__*/_react["default"].createElement("br", null), /*#__PURE__*/_react["default"].createElement("div", {
       className: "center"
     }, /*#__PURE__*/_react["default"].createElement("h2", null, "Gains/Losses in Timeframe")), /*#__PURE__*/_react["default"].createElement("div", {
       className: "center"
@@ -114547,7 +114567,8 @@ function Menu(props) {
       bordered: true,
       hover: true,
       size: "sm",
-      variant: "dark"
+      variant: "dark",
+      responsive: true
     }, /*#__PURE__*/_react["default"].createElement("thead", null, /*#__PURE__*/_react["default"].createElement("tr", null, /*#__PURE__*/_react["default"].createElement("th", null, "#"), currentSheet.map(function (_, index) {
       return renderCurrentSheetTitle(_, index);
     }))), /*#__PURE__*/_react["default"].createElement("tbody", null, /*#__PURE__*/_react["default"].createElement("tr", null, /*#__PURE__*/_react["default"].createElement("td", null, " Change in timeframe"), currentSheet.map(function (_, index) {
@@ -114556,7 +114577,7 @@ function Menu(props) {
       className: "center"
     }, /*#__PURE__*/_react["default"].createElement("h2", null, "Transaction History")), /*#__PURE__*/_react["default"].createElement("div", {
       className: "center"
-    }, "Transactions are fetched in batches of 10, it takes a while to make the full report, please be patient"), /*#__PURE__*/_react["default"].createElement(_reactBootstrap.Dropdown, null, /*#__PURE__*/_react["default"].createElement(_reactBootstrap.Dropdown.Toggle, {
+    }, "Transactions are fetched in batches of 5, it takes a while to make the full report, please be patient"), /*#__PURE__*/_react["default"].createElement(_reactBootstrap.Dropdown, null, /*#__PURE__*/_react["default"].createElement(_reactBootstrap.Dropdown.Toggle, {
       variant: "success",
       id: "dropdown-basic"
     }, "Contract Display (", currentContract, ")"), /*#__PURE__*/_react["default"].createElement(_reactBootstrap.Dropdown.Menu, null, /*#__PURE__*/_react["default"].createElement(_reactBootstrap.Dropdown.Item, {
@@ -114611,8 +114632,12 @@ function Menu(props) {
   }
 }
 
-function renderCurrentSheetTitle(tupla, index) {
-  return /*#__PURE__*/_react["default"].createElement("th", null, tupla[0]);
+function renderCurrentSheetTitle(tupla, index, currency) {
+  if (tupla[0] == "Currency") {
+    return /*#__PURE__*/_react["default"].createElement("th", null, "gains/losses");
+  } else {
+    return /*#__PURE__*/_react["default"].createElement("th", null, tupla[0]);
+  }
 }
 
 function renderCurrentSheetValue(tupla, index) {
@@ -114658,7 +114683,7 @@ function decodeTxInfo(info) {
     return [info.event, ": with heroes: ", info.heroIds.map(function (id) {
       return [id, " "];
     }), " rewards: ", JSON.stringify(info.rewards)];
-  } else if (info.event == "Start Fishing Quest" || info.event == "Start Foraging Quest" || info.event == "Start Wishing Well Quest" || info.event == "Cancel Quest") {
+  } else if (info.event == "Start Fishing Quest" || info.event == "Start Foraging Quest" || info.event == "Start Wishing Well Quest") {
     return [info.event, ": with heroes: ", info.heroIds.map(function (id) {
       return [id, " "];
     })];
@@ -114666,21 +114691,21 @@ function decodeTxInfo(info) {
     return [info.event, ": Bought ", info.boughtAmount, " ", info.bought, " for ", info.soldAmount, " ", info.sold];
   } else if (info.event == "Sold for Gold") {
     return [info.item, " ", info.event];
-  } else if (info.event == "Deposit LP") {
+  } else if (info.event == "Deposit LP" || info.event == "Withdraw LP") {
     return [info.event, ": ", info.amount];
   } else if (info.event == "Cancel Auction") {
     return [info.event, " of hero: ", info.heroId];
   } else if (info.event == "Add to Bank" || info.event == "Remove from Bank") {
     return [info.event, ": ", info.amount, " ", info.currency];
-  } else if (info.event == "Approved for Bank" || info.event == "Approved for Meditation Circle" || info.event == "Approved for Auction House" || info.event == "Transaction Failed" || info.event == "Started New Quest" || info.event == "Approved for Trade" || info.event == "Started Wishing Well Quest") {
+  } else if (info.event == "Approved for Bank" || info.event == "Approved for Meditation Circle" || info.event == "Approved for Auction House" || info.event == "Transaction Failed" || info.event == "Started New Quest" || info.event == "Approved for Trade" || info.event == "Started Wishing Well Quest" || info.event == "Approved for auction House" || info.event == "Approved for Summoning") {
     return [info.event];
   } else if (info.event == "Create Renting Auction") {
     return [info.event, " for hero: ", info.heroId, " for ", info.price, " ", info.currency];
-  } else if (info.event == "Cancel Renting Auction") {
+  } else if (info.event == "Cancel Renting Auction" || info.event == "Cancel Quest") {
     return [info.event, " for hero: ", info.heroId];
-  } else if (info.event == "Complete Meditation" || info.event == "Start Meditation") {
+  } else if (info.event == "Complete Meditation") {
     return [info.event, " with hero: ", info.heroId];
-  } else if (info.event == "add Liquidity") {
+  } else if (info.event == "add Liquidity" || info.event == "Liquidity Removed") {
     return [info.event, ": ", info.amountA, " ", info.tokenA, " and ", info.amountB, " ", info.tokenB];
   } else if (info.event == "add Liquidity One") {
     return [info.event, ": ", info.amountOne, " One and ", info.amount, " ", info.token];
@@ -114691,11 +114716,15 @@ function decodeTxInfo(info) {
   } else if (info.event == "Bought Hero") {
     return [info.event, ": ", info.heroId, " for ", info.price, " ", info.currency];
   } else if (info.event == "Summon Crystal") {
-    return [info.event, ": with hero ", info.summonerId, " and assistant: ", info.assistantId, " cost: ", info.summonerTears, "+", info.assistantTears, " Tears"];
+    return [info.event, ": with hero ", info.summonerId, " and assistant: ", info.assistantId, " cost: ", info.summonerTears + info.assistantTears, " Tears and ", info.amountJewel, " Jewels"];
   } else if (info.event == "Crystal Open") {
     return [info.event, ", received hero: ", info.heroId];
   } else if (info.event == "Liquidity One Removed") {
     return [info.event, ": ", info.amountOne, " One and ", info.amountToken, " ", info.token];
+  } else if (info.event == "Start Meditation") {
+    return [info.event, " with hero: ", info.heroId, " cost: ", info.amountJewel, " Jewels and ", info.amountRune, " ", info.rune];
+  } else if (info.event == "Transfer Hero") {
+    return [info.event, ": ", info.heroId];
   } else {
     return JSON.stringify(info);
   }
