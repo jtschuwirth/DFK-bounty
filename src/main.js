@@ -369,7 +369,7 @@ function DecodeTxInfo(info) {
                 {Object.keys(info.rewards).map((_, index) => renderItems(_, Object.values(info.rewards)[index]))}
             </div>
         )
-    } else if (info.event == "Start Fishing Quest" || info.event == "Start Foraging Quest" || info.event == "Start Wishing Well Quest") {
+    } else if (info.event == "Start Fishing Quest" || info.event == "Start Foraging Quest" || info.event == "Start Wishing Well Quest" || info.event == "Start Gardening Quest") {
         return [info.event, " with heroes: ", info.heroIds.map((id) => [id, " "])]
     } else if (info.event == "Trade") {
         return [info.event, ": Bought ", info.boughtAmount, " ",info.bought, " for ", info.soldAmount, " ", info.sold]
@@ -381,7 +381,7 @@ function DecodeTxInfo(info) {
         return [info.event, " of hero: ",info.heroId]
     } else if (info.event == "Add to Bank" || info.event == "Remove from Bank") {
         return [info.event, ": ",info.amount, " ",info.currency]
-    } else if (info.event == "Approved for Bank" || info.event == "Approved for Meditation Circle" || info.event == "Approved for Auction House" || info.event == "Transaction Failed" || info.event == "Started New Quest" || info.event == "Approved for Trade" || info.event == "Started Wishing Well Quest" || info.event == "Approved for auction House" || info.event == "Approved for Summoning") {
+    } else if (info.event == "Approved for Bank" || info.event == "Approved for Meditation Circle" || info.event == "Approved for Auction House" || info.event == "Transaction Failed" || info.event == "Started New Quest" || info.event == "Approved for Trade" || info.event == "Started Wishing Well Quest" || info.event == "Approved for auction House" || info.event == "Approved for Summoning" || info.event == "Create Profile") {
         return [info.event]
     } else if (info.event == "Create Renting Auction") {
         return [info.event, " for hero: ",info.heroId, " for ",info.price," ",info.currency]
