@@ -111482,7 +111482,7 @@ function Menu(props) {
   (0, _react.useEffect)(function () {
     var fetchData = /*#__PURE__*/function () {
       var _ref = (0, _asyncToGenerator2["default"])( /*#__PURE__*/_regenerator["default"].mark(function _callee2(address, start, end, currency) {
-        var txs, balance, balanceSheet, result, i, _i, _result, _i2, logrado, name, value, j;
+        var txs, balance, balanceSheet, hashes, result, i, _i, _result, _i2, _i3, logrado, name, value, j;
 
         return _regenerator["default"].wrap(function _callee2$(_context2) {
           while (1) {
@@ -111491,27 +111491,29 @@ function Menu(props) {
                 txs = [];
                 balance = [];
                 balanceSheet = [];
+                hashes = [];
 
                 if (!(props.currentAddress == "")) {
-                  _context2.next = 9;
+                  _context2.next = 11;
                   break;
                 }
 
                 txs = [];
                 balance = [];
                 balanceSheet = [];
-                _context2.next = 52;
+                hashes = [];
+                _context2.next = 55;
                 break;
 
-              case 9:
+              case 11:
                 setLoading(true);
-                _context2.next = 12;
+                _context2.next = 14;
                 return _axios["default"].post(API_URL + "currentBalance", {
                   address: address,
                   currency: currency
                 });
 
-              case 12:
+              case 14:
                 result = _context2.sent;
 
                 for (i = 0; i < Object.keys(result.data.currentBalance).length; i++) {
@@ -111523,103 +111525,111 @@ function Menu(props) {
                 setCurrentBalance(balance);
                 _i = 0;
 
-              case 16:
+              case 18:
                 if (!(_i < 1000)) {
-                  _context2.next = 51;
+                  _context2.next = 54;
                   break;
                 }
 
-                _context2.next = 19;
+                _context2.next = 21;
                 return _axios["default"].post(API_URL + "transactionReport", {
                   address: address,
                   startTime: start,
                   endTime: end,
                   currency: currency,
-                  page: _i
+                  page: _i,
+                  hashes: hashes
                 });
 
-              case 19:
+              case 21:
                 _result = _context2.sent;
 
                 if (!(_result.data.status == "finished")) {
-                  _context2.next = 24;
-                  break;
-                }
-
-                return _context2.abrupt("break", 51);
-
-              case 24:
-                if (!(_result.data.status == "error")) {
                   _context2.next = 26;
                   break;
                 }
 
-                return _context2.abrupt("break", 51);
+                return _context2.abrupt("break", 54);
 
               case 26:
+                if (!(_result.data.status == "error")) {
+                  _context2.next = 28;
+                  break;
+                }
+
+                return _context2.abrupt("break", 54);
+
+              case 28:
                 txs = _result.data.txs;
+
+                for (_i2 = 0; _i2 < Object.values(txs).length; _i2++) {
+                  if (hashes.includes(Object.values(txs)[_i2].hash) == false) {
+                    hashes.push(Object.values(txs)[_i2].hash);
+                  }
+                }
+
                 setData(function (currentData) {
                   return [].concat((0, _toConsumableArray2["default"])(currentData), [txs]);
                 });
-                _i2 = 0;
+                _i3 = 0;
 
-              case 29:
-                if (!(_i2 < Object.keys(_result.data.balanceSheet).length)) {
-                  _context2.next = 47;
+              case 32:
+                if (!(_i3 < Object.keys(_result.data.balanceSheet).length)) {
+                  _context2.next = 50;
                   break;
                 }
 
                 logrado = false;
-                name = Object.keys(_result.data.balanceSheet)[_i2];
-                value = Object.values(_result.data.balanceSheet)[_i2];
+                name = Object.keys(_result.data.balanceSheet)[_i3];
+                value = Object.values(_result.data.balanceSheet)[_i3];
                 currentSheet.map(function (_) {
                   return balanceSheet.push(_);
                 });
                 _context2.t0 = _regenerator["default"].keys(balanceSheet);
 
-              case 35:
+              case 38:
                 if ((_context2.t1 = _context2.t0()).done) {
-                  _context2.next = 43;
+                  _context2.next = 46;
                   break;
                 }
 
                 j = _context2.t1.value;
 
                 if (!(balanceSheet[j][0].toString() == name.toString())) {
-                  _context2.next = 41;
+                  _context2.next = 44;
                   break;
                 }
 
                 balanceSheet[j] = [name, balanceSheet[j][1] + value];
                 logrado = true;
-                return _context2.abrupt("break", 43);
+                return _context2.abrupt("break", 46);
 
-              case 41:
-                _context2.next = 35;
+              case 44:
+                _context2.next = 38;
                 break;
 
-              case 43:
+              case 46:
                 if (logrado == false) {
                   balanceSheet.push([name, value]);
                 }
 
-              case 44:
-                _i2++;
-                _context2.next = 29;
+              case 47:
+                _i3++;
+                _context2.next = 32;
                 break;
 
-              case 47:
+              case 50:
                 setSheet((0, _toConsumableArray2["default"])(balanceSheet));
 
-              case 48:
+              case 51:
                 _i++;
-                _context2.next = 16;
+                _context2.next = 18;
                 break;
 
-              case 51:
+              case 54:
                 setLoading(false);
 
-              case 52:
+              case 55:
               case "end":
                 return _context2.stop();
             }

@@ -100,10 +100,12 @@ function Menu(props) {
             let txs = [];
             let balance = [];
             let balanceSheet = [];
+            let hashes = [];
             if (props.currentAddress == "") {
                 txs = [];
                 balance = [];
                 balanceSheet = [];
+                hashes = [];
             }
             else {
                 setLoading(true);
@@ -123,7 +125,8 @@ function Menu(props) {
                         startTime : start,
                         endTime   : end,
                         currency  : currency,
-                        page      : i
+                        page      : i,
+                        hashes    : hashes
                     })
                     if (result.data.status == "finished") {
                         break
@@ -131,6 +134,11 @@ function Menu(props) {
                         break
                     }
                     txs = result.data.txs;
+                    for (let i=0; i<Object.values(txs).length; i++) {
+                        if (hashes.includes(Object.values(txs)[i].hash) == false) {
+                            hashes.push(Object.values(txs)[i].hash)
+                        } 
+                    }
                     setData(currentData => [...currentData, txs]);
                     for (let i = 0; i<Object.keys(result.data.balanceSheet).length; i++) {
                         let logrado = false;
