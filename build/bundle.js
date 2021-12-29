@@ -111734,7 +111734,9 @@ function Menu(props) {
       className: "center"
     }, /*#__PURE__*/_react["default"].createElement("h2", null, "Transaction History")), /*#__PURE__*/_react["default"].createElement("div", {
       className: "center"
-    }, "Transactions are fetched in batches of 5, it takes a while to make the full report, please be patient"), /*#__PURE__*/_react["default"].createElement(_reactBootstrap.Dropdown, null, /*#__PURE__*/_react["default"].createElement(_reactBootstrap.Dropdown.Toggle, {
+    }, "Transactions are fetched in batches of 10, it takes a while to make the full report, please be patient"), /*#__PURE__*/_react["default"].createElement("div", {
+      className: "center"
+    }, "Summoning and Meditation cost are dependant on the Defi Kingdoms Api which might not be up to date, in which case the cost of runes and jewels will default to 0"), /*#__PURE__*/_react["default"].createElement(_reactBootstrap.Dropdown, null, /*#__PURE__*/_react["default"].createElement(_reactBootstrap.Dropdown.Toggle, {
       variant: "success",
       id: "dropdown-basic"
     }, "Contract Display (", currentContract, ")"), /*#__PURE__*/_react["default"].createElement(_reactBootstrap.Dropdown.Menu, null, /*#__PURE__*/_react["default"].createElement(_reactBootstrap.Dropdown.Item, {
@@ -111890,6 +111892,8 @@ function DecodeTxInfo(info) {
     return [info.event, " with hero: ", info.heroId, " cost: ", info.amountJewel, " Jewels and ", info.amountRune, " ", info.rune];
   } else if (info.event == "Transfer Hero") {
     return [info.event, ": ", info.heroId];
+  } else if (info.event == "Transfer Jewel") {
+    return [info.event, ": ", info.amount, "Jewels to ", info.recipient];
   } else {
     return JSON.stringify(info);
   }
