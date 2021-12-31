@@ -12,9 +12,9 @@ window.onload = async function initialize() {
         document.getElementById('app'));
 }
 
-//const API_URL = "http://192.168.0.30:5000/"
+const API_URL = "http://192.168.0.2:5000/"
 //const API_URL = "http://localhost:5000/"
-const API_URL = "https://jtschuwirth.xyz/"
+//const API_URL = "https://jtschuwirth.xyz/"
 
 function App() {
     const [currentMenu, setMenu] = useState("mainmenu");
@@ -147,7 +147,7 @@ function Menu(props) {
                         currentSheet.map((_) => balanceSheet.push(_));
                         for (let j in balanceSheet) {
                             if (balanceSheet[j][0].toString() == name.toString()) {
-                                balanceSheet[j] = [name, balanceSheet[j][1]+value];
+                                balanceSheet[j] = [name, [balanceSheet[j][1][0]+value[0], balanceSheet[j][1][1]+value[1]]];
                                 logrado = true;
                                 break
                             }
@@ -213,12 +213,12 @@ function Menu(props) {
                                 {currentBalance.map((_, index) => renderCurrentBalanceQuantity(_, index))}
                             </tr>
                             <tr>
-                                <td> Value in {displayCurrency}</td>
+                                <td> Value {displayCurrency}</td>
                                 {currentBalance.map((_, index) => renderCurrentBalanceValue(_, index))}
                             </tr>
                         </tbody>
                     </Table>
-                    <div className="center"><h2>Current Balance value ({displayCurrency}): {currentBalance.reduce((a, b) => a + b[1][1], 0)}</h2></div>
+                    <div className="center"><h2>Current Balance ({displayCurrency}): {currentBalance.reduce((a, b) => a + b[1][1], 0).toFixed(3)}</h2></div>
 
                     <br></br>
                     <div className="center"><h2>Gains/Losses in Timeframe</h2></div>
@@ -233,14 +233,19 @@ function Menu(props) {
                         </thead>
                         <tbody>
                             <tr>
-                                <td> Change in timeframe</td>
+                                <td> Quantity Change</td>
+                                {currentSheet.map((_, index) => renderCurrentSheetQuantity(_, index))}
+                            </tr>
+                            <tr>
+                                <td> Value Change {displayCurrency}</td>
                                 {currentSheet.map((_, index) => renderCurrentSheetValue(_, index))}
                             </tr>
                         </tbody>
                     </Table>
+                    <div className="center"><h2>Current Gains/Losses ({displayCurrency}): {currentSheet.reduce((a, b) => a + b[1][1], 0).toFixed(3)}</h2></div>
                     <br></br>
                     <div className="center"><h2>Transaction History</h2></div>
-                    <div className="center">Transactions are fetched in batches of 10, it takes a while to make the full report, please be patient</div>
+                    <div className="center">Transactions are fetched in batches of 50, it takes a while to make the full report, please be patient</div>
                     <div className="center">Summoning and Meditation cost are dependant on the Defi Kingdoms Api which might not be up to date, in which case the cost of runes and jewels will default to 0</div>
                     <Dropdown>
                         <Dropdown.Toggle variant="success" id="dropdown-basic">
@@ -269,7 +274,6 @@ function Menu(props) {
                             <th>Change (Jewel)</th>
                             <th>Change ({displayCurrency})</th>
                             <th>Gas (One)</th>
-                            <th>Gas ({displayCurrency})</th>
                             <th>Date</th>
                         </tr>
                         </thead>
@@ -293,21 +297,23 @@ function Menu(props) {
         )
     }
 }
-function renderCurrentSheetTitle(tupla, index, currency) {
-    if (tupla[0] == "Currency") {
-        return (
-            <th>gains/losses</th>
-        )
-    } else {
-        return (
-            <th>{tupla[0]}</th>
-        )
-    }
+function renderCurrentSheetTitle(tupla, index) {
+
+    return (
+        <th>{tupla[0]}</th>
+    )
+
 }
 
 function renderCurrentSheetValue(tupla, index) {
     return (
-        <th>{tupla[1]}</th>
+        <th>{parseFloat(tupla[1][1].toFixed(3))}</th>
+    )
+}
+
+function renderCurrentSheetQuantity(tupla, index) {
+    return (
+        <th>{parseFloat(tupla[1][0].toFixed(3))}</th>
     )
 }
 
@@ -318,13 +324,13 @@ function renderCurrentBalanceTitle(tupla, index) {
 }
 function renderCurrentBalanceValue(tupla, index) {
     return (
-        <th>{tupla[1][1]}</th>
+        <th>{parseFloat(tupla[1][1].toFixed(3))}</th>
     )
 }
 
 function renderCurrentBalanceQuantity(tupla, index) {
     return (
-        <th>{tupla[1][0]}</th>
+        <th>{parseFloat(tupla[1][0].toFixed(3))}</th>
     )
 }
 
@@ -344,15 +350,25 @@ function renderData(tx, index, contract) {
             <td>{tx.chain}</td>
             <td>{tx.contract}</td>
             <td>{DecodeTxInfo(tx.txType)}</td>
-            <td>{tx.balanceChange.One}</td>
-            <td>{tx.balanceChange.Jewel}</td>
-            <td>{tx.balanceChange.Currency}</td>
+            <td>{renderOne(tx)}</td>
+            <td>{renderJewel(tx)}</td>
+            <td>{Object.values(tx.balanceChange).reduce((a, b) => a + b[1], 0).toFixed(4)}</td>
             <td>{tx.gasPaid}</td>
-            <td>{tx.gasPaidCurrency}</td>
             <td>{new Date(tx.timestamp * 1000).toLocaleDateString("en-US")}</td>
         </tr>
         )
     } else { return "" }
+}
+
+function renderOne(tx) {
+    if (tx.balanceChange.One != undefined) {
+        return tx.balanceChange.One[0]
+    }
+}
+function renderJewel(tx) {
+    if (tx.balanceChange.Jewel != undefined) {
+        return tx.balanceChange.Jewel[0]
+    }
 }
 
 function renderItems(item, quantity) {
@@ -370,7 +386,7 @@ function DecodeTxInfo(info) {
                 {Object.keys(info.rewards).map((_, index) => renderItems(_, Object.values(info.rewards)[index]))}
             </div>
         )
-    } else if (info.event == "Start Fishing Quest" || info.event == "Start Foraging Quest" || info.event == "Start Wishing Well Quest" || info.event == "Start Gardening Quest") {
+    } else if (info.event == "Start Fishing Quest" || info.event == "Start Foraging Quest" || info.event == "Start Wishing Well Quest" || info.event == "Start Gardening Quest" || info.event == "Start Mining Quest") {
         return [info.event, " with heroes: ", info.heroIds.map((id) => [id, " "])]
     } else if (info.event == "Trade") {
         return [info.event, ": Bought ", info.boughtAmount, " ",info.bought, " for ", info.soldAmount, " ", info.sold]

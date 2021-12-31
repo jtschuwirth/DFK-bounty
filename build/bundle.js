@@ -111331,11 +111331,10 @@ window.onload = /*#__PURE__*/function () {
   }
 
   return initialize;
-}(); //const API_URL = "http://192.168.0.30:5000/"
-//const API_URL = "http://localhost:5000/"
+}();
 
-
-var API_URL = "https://jtschuwirth.xyz/";
+var API_URL = "http://192.168.0.2:5000/"; //const API_URL = "http://localhost:5000/"
+//const API_URL = "https://jtschuwirth.xyz/"
 
 function App() {
   var _useState = (0, _react.useState)("mainmenu"),
@@ -111600,7 +111599,7 @@ function Menu(props) {
                   break;
                 }
 
-                balanceSheet[j] = [name, balanceSheet[j][1] + value];
+                balanceSheet[j] = [name, [balanceSheet[j][1][0] + value[0], balanceSheet[j][1][1] + value[1]]];
                 logrado = true;
                 return _context2.abrupt("break", 46);
 
@@ -111707,13 +111706,13 @@ function Menu(props) {
       return renderCurrentBalanceTitle(_, index);
     }))), /*#__PURE__*/_react["default"].createElement("tbody", null, /*#__PURE__*/_react["default"].createElement("tr", null, /*#__PURE__*/_react["default"].createElement("td", null, " Quantity"), currentBalance.map(function (_, index) {
       return renderCurrentBalanceQuantity(_, index);
-    })), /*#__PURE__*/_react["default"].createElement("tr", null, /*#__PURE__*/_react["default"].createElement("td", null, " Value in ", displayCurrency), currentBalance.map(function (_, index) {
+    })), /*#__PURE__*/_react["default"].createElement("tr", null, /*#__PURE__*/_react["default"].createElement("td", null, " Value ", displayCurrency), currentBalance.map(function (_, index) {
       return renderCurrentBalanceValue(_, index);
     })))), /*#__PURE__*/_react["default"].createElement("div", {
       className: "center"
-    }, /*#__PURE__*/_react["default"].createElement("h2", null, "Current Balance value (", displayCurrency, "): ", currentBalance.reduce(function (a, b) {
+    }, /*#__PURE__*/_react["default"].createElement("h2", null, "Current Balance (", displayCurrency, "): ", currentBalance.reduce(function (a, b) {
       return a + b[1][1];
-    }, 0))), /*#__PURE__*/_react["default"].createElement("br", null), /*#__PURE__*/_react["default"].createElement("div", {
+    }, 0).toFixed(3))), /*#__PURE__*/_react["default"].createElement("br", null), /*#__PURE__*/_react["default"].createElement("div", {
       className: "center"
     }, /*#__PURE__*/_react["default"].createElement("h2", null, "Gains/Losses in Timeframe")), /*#__PURE__*/_react["default"].createElement("div", {
       className: "center"
@@ -111728,13 +111727,19 @@ function Menu(props) {
       responsive: true
     }, /*#__PURE__*/_react["default"].createElement("thead", null, /*#__PURE__*/_react["default"].createElement("tr", null, /*#__PURE__*/_react["default"].createElement("th", null, "#"), currentSheet.map(function (_, index) {
       return renderCurrentSheetTitle(_, index);
-    }))), /*#__PURE__*/_react["default"].createElement("tbody", null, /*#__PURE__*/_react["default"].createElement("tr", null, /*#__PURE__*/_react["default"].createElement("td", null, " Change in timeframe"), currentSheet.map(function (_, index) {
+    }))), /*#__PURE__*/_react["default"].createElement("tbody", null, /*#__PURE__*/_react["default"].createElement("tr", null, /*#__PURE__*/_react["default"].createElement("td", null, " Quantity Change"), currentSheet.map(function (_, index) {
+      return renderCurrentSheetQuantity(_, index);
+    })), /*#__PURE__*/_react["default"].createElement("tr", null, /*#__PURE__*/_react["default"].createElement("td", null, " Value Change ", displayCurrency), currentSheet.map(function (_, index) {
       return renderCurrentSheetValue(_, index);
-    })))), /*#__PURE__*/_react["default"].createElement("br", null), /*#__PURE__*/_react["default"].createElement("div", {
+    })))), /*#__PURE__*/_react["default"].createElement("div", {
+      className: "center"
+    }, /*#__PURE__*/_react["default"].createElement("h2", null, "Current Gains/Losses (", displayCurrency, "): ", currentSheet.reduce(function (a, b) {
+      return a + b[1][1];
+    }, 0).toFixed(3))), /*#__PURE__*/_react["default"].createElement("br", null), /*#__PURE__*/_react["default"].createElement("div", {
       className: "center"
     }, /*#__PURE__*/_react["default"].createElement("h2", null, "Transaction History")), /*#__PURE__*/_react["default"].createElement("div", {
       className: "center"
-    }, "Transactions are fetched in batches of 10, it takes a while to make the full report, please be patient"), /*#__PURE__*/_react["default"].createElement("div", {
+    }, "Transactions are fetched in batches of 50, it takes a while to make the full report, please be patient"), /*#__PURE__*/_react["default"].createElement("div", {
       className: "center"
     }, "Summoning and Meditation cost are dependant on the Defi Kingdoms Api which might not be up to date, in which case the cost of runes and jewels will default to 0"), /*#__PURE__*/_react["default"].createElement(_reactBootstrap.Dropdown, null, /*#__PURE__*/_react["default"].createElement(_reactBootstrap.Dropdown.Toggle, {
       variant: "success",
@@ -111777,7 +111782,7 @@ function Menu(props) {
       hover: true,
       size: "sm",
       variant: "dark"
-    }, /*#__PURE__*/_react["default"].createElement("thead", null, /*#__PURE__*/_react["default"].createElement("tr", null, /*#__PURE__*/_react["default"].createElement("th", null, "#"), /*#__PURE__*/_react["default"].createElement("th", null, "Chain"), /*#__PURE__*/_react["default"].createElement("th", null, "Contract Name"), /*#__PURE__*/_react["default"].createElement("th", null, "Transaction Type"), /*#__PURE__*/_react["default"].createElement("th", null, "Change (One)"), /*#__PURE__*/_react["default"].createElement("th", null, "Change (Jewel)"), /*#__PURE__*/_react["default"].createElement("th", null, "Change (", displayCurrency, ")"), /*#__PURE__*/_react["default"].createElement("th", null, "Gas (One)"), /*#__PURE__*/_react["default"].createElement("th", null, "Gas (", displayCurrency, ")"), /*#__PURE__*/_react["default"].createElement("th", null, "Date"))), /*#__PURE__*/_react["default"].createElement("tbody", null, currentData.map(function (txs) {
+    }, /*#__PURE__*/_react["default"].createElement("thead", null, /*#__PURE__*/_react["default"].createElement("tr", null, /*#__PURE__*/_react["default"].createElement("th", null, "#"), /*#__PURE__*/_react["default"].createElement("th", null, "Chain"), /*#__PURE__*/_react["default"].createElement("th", null, "Contract Name"), /*#__PURE__*/_react["default"].createElement("th", null, "Transaction Type"), /*#__PURE__*/_react["default"].createElement("th", null, "Change (One)"), /*#__PURE__*/_react["default"].createElement("th", null, "Change (Jewel)"), /*#__PURE__*/_react["default"].createElement("th", null, "Change (", displayCurrency, ")"), /*#__PURE__*/_react["default"].createElement("th", null, "Gas (One)"), /*#__PURE__*/_react["default"].createElement("th", null, "Date"))), /*#__PURE__*/_react["default"].createElement("tbody", null, currentData.map(function (txs) {
       return Object.values(txs).map(function (_, index) {
         return renderData(_, Object.keys(txs)[index], currentContract);
       });
@@ -111791,16 +111796,16 @@ function Menu(props) {
   }
 }
 
-function renderCurrentSheetTitle(tupla, index, currency) {
-  if (tupla[0] == "Currency") {
-    return /*#__PURE__*/_react["default"].createElement("th", null, "gains/losses");
-  } else {
-    return /*#__PURE__*/_react["default"].createElement("th", null, tupla[0]);
-  }
+function renderCurrentSheetTitle(tupla, index) {
+  return /*#__PURE__*/_react["default"].createElement("th", null, tupla[0]);
 }
 
 function renderCurrentSheetValue(tupla, index) {
-  return /*#__PURE__*/_react["default"].createElement("th", null, tupla[1]);
+  return /*#__PURE__*/_react["default"].createElement("th", null, parseFloat(tupla[1][1].toFixed(3)));
+}
+
+function renderCurrentSheetQuantity(tupla, index) {
+  return /*#__PURE__*/_react["default"].createElement("th", null, parseFloat(tupla[1][0].toFixed(3)));
 }
 
 function renderCurrentBalanceTitle(tupla, index) {
@@ -111808,11 +111813,11 @@ function renderCurrentBalanceTitle(tupla, index) {
 }
 
 function renderCurrentBalanceValue(tupla, index) {
-  return /*#__PURE__*/_react["default"].createElement("th", null, tupla[1][1]);
+  return /*#__PURE__*/_react["default"].createElement("th", null, parseFloat(tupla[1][1].toFixed(3)));
 }
 
 function renderCurrentBalanceQuantity(tupla, index) {
-  return /*#__PURE__*/_react["default"].createElement("th", null, tupla[1][0]);
+  return /*#__PURE__*/_react["default"].createElement("th", null, parseFloat(tupla[1][0].toFixed(3)));
 }
 
 function renderData(tx, index, contract) {
@@ -111829,9 +111834,23 @@ function renderData(tx, index, contract) {
   if (render == true) {
     return /*#__PURE__*/_react["default"].createElement("tr", {
       key: index
-    }, /*#__PURE__*/_react["default"].createElement("td", null, index), /*#__PURE__*/_react["default"].createElement("td", null, tx.chain), /*#__PURE__*/_react["default"].createElement("td", null, tx.contract), /*#__PURE__*/_react["default"].createElement("td", null, DecodeTxInfo(tx.txType)), /*#__PURE__*/_react["default"].createElement("td", null, tx.balanceChange.One), /*#__PURE__*/_react["default"].createElement("td", null, tx.balanceChange.Jewel), /*#__PURE__*/_react["default"].createElement("td", null, tx.balanceChange.Currency), /*#__PURE__*/_react["default"].createElement("td", null, tx.gasPaid), /*#__PURE__*/_react["default"].createElement("td", null, tx.gasPaidCurrency), /*#__PURE__*/_react["default"].createElement("td", null, new Date(tx.timestamp * 1000).toLocaleDateString("en-US")));
+    }, /*#__PURE__*/_react["default"].createElement("td", null, index), /*#__PURE__*/_react["default"].createElement("td", null, tx.chain), /*#__PURE__*/_react["default"].createElement("td", null, tx.contract), /*#__PURE__*/_react["default"].createElement("td", null, DecodeTxInfo(tx.txType)), /*#__PURE__*/_react["default"].createElement("td", null, renderOne(tx)), /*#__PURE__*/_react["default"].createElement("td", null, renderJewel(tx)), /*#__PURE__*/_react["default"].createElement("td", null, Object.values(tx.balanceChange).reduce(function (a, b) {
+      return a + b[1];
+    }, 0).toFixed(4)), /*#__PURE__*/_react["default"].createElement("td", null, tx.gasPaid), /*#__PURE__*/_react["default"].createElement("td", null, new Date(tx.timestamp * 1000).toLocaleDateString("en-US")));
   } else {
     return "";
+  }
+}
+
+function renderOne(tx) {
+  if (tx.balanceChange.One != undefined) {
+    return tx.balanceChange.One[0];
+  }
+}
+
+function renderJewel(tx) {
+  if (tx.balanceChange.Jewel != undefined) {
+    return tx.balanceChange.Jewel[0];
   }
 }
 
@@ -111850,7 +111869,7 @@ function DecodeTxInfo(info) {
     }), " rewards: "]), Object.keys(info.rewards).map(function (_, index) {
       return renderItems(_, Object.values(info.rewards)[index]);
     }));
-  } else if (info.event == "Start Fishing Quest" || info.event == "Start Foraging Quest" || info.event == "Start Wishing Well Quest" || info.event == "Start Gardening Quest") {
+  } else if (info.event == "Start Fishing Quest" || info.event == "Start Foraging Quest" || info.event == "Start Wishing Well Quest" || info.event == "Start Gardening Quest" || info.event == "Start Mining Quest") {
     return [info.event, " with heroes: ", info.heroIds.map(function (id) {
       return [id, " "];
     })];

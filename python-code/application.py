@@ -16,7 +16,13 @@ from utils import (
     getLastValueItemtoCurrency,
     getValueJeweltoCurrency,
     getValueOnetoCurrency,
-    getBalanceChange
+    getBalanceChange,
+    queryHeroLevel,
+    queryHeroSummons,
+    checkCostLevel,
+    checkCostSummons,
+    AVAX_get_transaction_history,
+    queryPriceByDateJSON
 )
 
 import json
@@ -46,7 +52,7 @@ ERC721ABI = json.load(ERC721Json)
 ERC20Json = open("abi/ERC20.json")
 ERC20ABI = json.load(ERC20Json)
 
-QuestCoreJson = open("abi/QuestCoreV2.json")
+QuestCoreJson = open("abi/QuestCore.json")
 QuestCoreABI = json.load(QuestCoreJson)
 
 BankJson = open("abi/Bank.json")
@@ -72,7 +78,7 @@ dfk_contracts = {
     "Airdrop"                     : "one15eudryl7e3nhuym6qrl0ksafenl62vsszleqj2",
     "Profiles"                    : "one14028gx2gxa937hw4m46entqlsk35etxaln7glh",
     "Hero"                        : "one1ta6nmn0ekxke427px3npf505w3hadnjuhlh7vv",
-    "Gaia's Tears"                : "one1yn4q6smd8snq97l7l0n2z6auxpxfv0gyvfd7gr",
+    "Gaias Tears"                 : "one1yn4q6smd8snq97l7l0n2z6auxpxfv0gyvfd7gr",
     "DFK Gold"                    : "one18f8deue39azw7qn6elvvyyuz55jejdh8xdfdw2",
     "Ambertaffy"                  : "one1dcduq8x995t9kdtuggzzeasgzkdzhqwpmxtseg",
     "Darkweed"                    : "one1dr4yvsx9eekvpjdp79ahhzpvk8974nxhfufs5f",
@@ -113,12 +119,25 @@ dfk_contractsETH = {
     "0xb12c13e66AdE1F72f71834f2FC5082Db8C091358" : "AVAX",
     "0xFbdd194376de19a88118e84E279b977f165d01b8" : "wMatic",
     "0x224e64ec1BDce3870a6a6c777eDd450454068FEC" : "wUST",
-
+    "0x985458E523dB3d53125813eD68c274899e9DfAb4" : "USDC",
+    "0x6983D1E6DEf3690C4d616b13597A09e6193EA013" : "ETH",
+    "0x3095c7557bCb296ccc6e363DE01b760bA031F2d9" : "wBTC",
+    "0x0aB43550A6915F9f67d0c454C2E90385E6497EaA" : "BUSD Token",
+    "0x892D81221484F690C0a97d3DD18B9144A3ECDFB7" : "Magic",
+    "0xCf1709Ad76A79d5a60210F23e81cE2460542A836" : "Tranquil",
+    "0x0159ED2E06DDCD46a25E74eb8e159Ce666B28687" : "FarmersOnly Token2",
+    "0xb1f6E61E1e113625593a22fa6aa94F8052bc39E0" : "BNB",
+    "0x550D9923693998A6FE20801ABe3f1A78e0d75089" : "Immortl",
+    "0x17fDEdda058d43fF1615cdb72a40Ce8704C2479A" : "SuperBid",
+    "0x9b68BF4bF89c115c721105eaf6BD5164aFcc51E4" : "Freyala",
+    "0x6008C8769BFACd92251bA838382e7e5637C7e74D" : "Cosmic Coin",
+    "0x3C2B8Be99c50593081EAA2A724F0B8285F5aba8f" : "Tether USD",
+    "0xd009b07B4a65CC769379875Edc279961D710362d" : "Rain Token",
 
     '0x66F5BfD910cd83d3766c4B39d13730C911b2D286' : "Shvas Rune",
-    "0x24eA0D436d3c2602fbfEfBe6a16bBc304C963D04" : "Gaia's Tears",
+    "0x24eA0D436d3c2602fbfEfBe6a16bBc304C963D04" : "Gaias Tears",
     "0x95d02C1Dc58F05A015275eB49E107137D9Ee81Dc" : "Grey Pet Egg",
-    "0x9678518e04fe02fb30b55e2d0e554e26306d0892" : "Blue Pet Egg",
+    "0x9678518e04Fe02FB30b55e2D0e554E26306d0892" : "Blue Pet Egg",
     "0x6d605303e9Ac53C59A3Da1ecE36C9660c7A71da5" : "Green Pet Egg",
 
     "0x78aED65A2Cc40C7D8B0dF1554Da60b38AD351432" : "Bloater",
@@ -151,9 +170,10 @@ dfk_contracts_abi = {
     "AuctionHouse"       : SaleAuctionABI,
     "MasterGardener"     : MasterGardenerABI,
     "xJEWEL"             : BankABI,
+    "Banker"             : BankABI,
     "Hero"               : ERC721ABI,  
     "JewelToken"         : ERC20ABI,
-    "Gaia's Tears"       : ERC721ABI,
+    "Gaias Tears"        : ERC721ABI,
     "DFK Gold"           : ERC721ABI,
     "Ambertaffy"         : ERC721ABI,
     "Darkweed"           : ERC721ABI,
@@ -177,7 +197,7 @@ dfk_contracts_abi = {
 
 dfk_contracts_tokens = {
     "JewelToken"                  : "one1wt93p34l543ym5r77cyqyl3kd0tfqpy0eyd6n0",
-    "Gaia's Tears"                : "one1yn4q6smd8snq97l7l0n2z6auxpxfv0gyvfd7gr",
+    "Gaias Tears"                 : "one1yn4q6smd8snq97l7l0n2z6auxpxfv0gyvfd7gr",
     "DFK Gold"                    : "one18f8deue39azw7qn6elvvyyuz55jejdh8xdfdw2",
     "Ambertaffy"                  : "one1dcduq8x995t9kdtuggzzeasgzkdzhqwpmxtseg",
     "Darkweed"                    : "one1dr4yvsx9eekvpjdp79ahhzpvk8974nxhfufs5f",
@@ -204,6 +224,7 @@ Blacklist = [
     "Green Pet Egg",
     "Grey Pet Egg",
     "Blue Pet Egg",
+    "Golden Egg",
     "Blue Stem",
     "Milkweed",
     "Spiderfruit"
@@ -236,7 +257,7 @@ def getTxType(tx, contract_name, txData, address, currency):
             else:
                 return {"event": "Failed Receipt"}
         if contract_name == "MeditationCircle":
-            decode = decodeMeditationCircle(contract_result, contract, receipt)
+            decode = decodeMeditationCircle(contract_result, tx)
             return decode
         elif contract_name == "Hero":
             decode = decodeHero(contract_result)
@@ -257,7 +278,7 @@ def getTxType(tx, contract_name, txData, address, currency):
             decode = decodeMasterGardener(contract_result, contract, receipt)
             return decode 
         elif contract_name == "Summoning":
-            decode = decodeSummoning(contract_result, contract, receipt)
+            decode = decodeSummoning(contract_result, tx, contract, receipt)
             return decode 
         elif contract_name == "JewelToken":
             decode = decodeJewel(contract_result)
@@ -269,6 +290,8 @@ def getTxType(tx, contract_name, txData, address, currency):
             result = contract_result
             print("Missing Contract decode", contract_name, result)
             return {"event": "Missing Contract decode"}
+    elif contract_name == "Profiles":
+        return {"event": "Create Profile"}
     else:
         return {"event": "Missing Contract ABI"}
 
@@ -276,6 +299,8 @@ def decodeItem(result, contract, receipt, name):
     decode = ""
     if str(result[0]) == "<Function approve(address,uint256)>":
         if result[1]["to"] == "0x0594D86b2923076a2316EaEA4E1Ca286dAA142C1":
+            #receipt_result = contract.events.Approval().processReceipt(receipt)
+            #print(receipt_result)
             decode = {
                 "event" : "Approved for Meditation Circle",
                 "item"  : name
@@ -297,7 +322,7 @@ def decodeItem(result, contract, receipt, name):
                 "item"  : name
             }
     if decode == "":
-        print(result)
+        print("decode Item", name, result)
         decode = {"event": "Transaction Failed"}
     return decode
 
@@ -305,6 +330,8 @@ def decodeJewel(result):
     decode = ""
     if str(result[0]) == "<Function approve(address,uint256)>":
         if result[1]["spender"] == "0x0594D86b2923076a2316EaEA4E1Ca286dAA142C1":
+            #receipt_result = contract.events.Approval().processReceipt(receipt)
+            #print(receipt_result)
             decode = {
                 "event" : "Approved for Meditation Circle",
                 "item"  : "Jewel"
@@ -329,9 +356,15 @@ def decodeJewel(result):
                 "event" : "Approved for Summoning",
                 "item"  : "Jewel"
             }
+    elif str(result[0]) == "<Function transfer(address,uint256)>":
+        decode = {
+            "event"    : "Transfer Jewel",
+            "recipient": result[1]["recipient"],
+            "amount"   : round(result[1]["amount"]/(10**18),3)
+        }
 
     if decode == "":
-        print(result)
+        print("decode Jewel", result)
         decode = {"event": "Transaction Failed"}
     return decode
 
@@ -341,6 +374,13 @@ def decodeMasterGardener(result, contract, receipt):
         decode = ["Deposit: ", round(result[1]["_amount"]/(10**18),3), " LP"]
         decode = {
             "event" : "Deposit LP",
+            "amount": round(result[1]["_amount"]/(10**18),3)
+        }
+    
+    elif str(result[0]) == "<Function withdraw(uint256,uint256,address)>":
+        decode = ["Deposit: ", round(result[1]["_amount"]/(10**18),3), " LP"]
+        decode = {
+            "event" : "Withdraw LP",
             "amount": round(result[1]["_amount"]/(10**18),3)
         }
 
@@ -353,11 +393,11 @@ def decodeMasterGardener(result, contract, receipt):
                 "lockedAmount"   : round(i["args"]["lockAmount"]/(10**18),3)
             }
     if decode == "":
-        print(result)
+        print("decode MasterGardener", result)
         decode = {"event": "Transaction Failed"}
     return decode
 
-def decodeMeditationCircle(result, contract, receipt):
+def decodeMeditationCircle(result, tx):
     decode = ""
     if str(result[0]) == "<Function completeMeditation(uint256)>":
         decode = {
@@ -365,18 +405,25 @@ def decodeMeditationCircle(result, contract, receipt):
             "heroId": result[1]['_heroId']
         }
     elif str(result[0]) == "<Function startMeditation(uint256,uint8,uint8,uint8,address)>":
-        receipt_result = contract.events.LevelUp().processReceipt(receipt)
-        print(receipt_result)
+        heroLevel = queryHeroLevel(result[1]["_heroId"], int(tx["blockNumber"],16)-1)
+        if heroLevel == "Error":
+            #Mejorar handling de este error
+            cost = [0, "Shvas Rune", 0]
+        else:
+            cost = checkCostLevel(heroLevel)
         decode = {
-            "event" : "Start Meditation",
-            "heroId": result[1]['_heroId']
+            "event"      : "Start Meditation",
+            "heroId"     : result[1]['_heroId'],
+            "amountJewel": cost[0],
+            "rune"       : cost[1],
+            "amountRune" : cost[2],
         }
     if decode == "":
-        print(result)
+        print("decode MeditationCircle", result)
         decode = {"event": "Transaction Failed"}
     return decode
 
-def decodeSummoning(result, contract, receipt):
+def decodeSummoning(result, tx, contract, receipt):
     decode = ""
     if str(result[0]) == "<Function cancelAuction(uint256)>":
         decode = {
@@ -400,6 +447,12 @@ def decodeSummoning(result, contract, receipt):
             }
     elif str(result[0]) == "<Function summonCrystal(uint256,uint256,uint16,uint16,address)>":
         receipt_result = contract.events.CrystalSummoned().processReceipt(receipt)
+        heroInfo = queryHeroSummons(result[1]["_summonerId"], int(tx["blockNumber"],16)-1)
+        if heroInfo == "Error":
+            #Mejorar handling de este error
+            cost = 0
+        else:
+            cost = checkCostSummons(heroInfo[0], heroInfo[1])
         for i in receipt_result:
             decode = {
                 "event"         : "Summon Crystal",
@@ -407,7 +460,8 @@ def decodeSummoning(result, contract, receipt):
                 "summonerId"    : result[1]["_summonerId"],
                 "assistantId"   : result[1]["_assistantId"],
                 "summonerTears" : result[1]["_summonerTears"],
-                "assistantTears": result[1]["_assistantTears"]
+                "assistantTears": result[1]["_assistantTears"],
+                "amountJewel"   : cost
             }
 
     if decode == "":
@@ -486,7 +540,6 @@ def decodeQuest(result, contract, receipt, txData, currency):
     decode = ""
     heroes = []
     rewards = {}
-    balanceChange = 0
     if str(result[0]) == "<Function completeQuest(uint256)>":
         receipt_result = contract.events.QuestReward().processReceipt(receipt)
         for i in receipt_result:
@@ -496,25 +549,11 @@ def decodeQuest(result, contract, receipt, txData, currency):
                 item = dfk_contractsETH[i["args"]["rewardItem"]]
                 if item == "Jewel":
                     quantity = round(i["args"]["itemQuantity"]/(10**18),5)
+                elif item == "DFK Gold":
+                    quantity = round(i["args"]["itemQuantity"]/(1000),3)
                 else:
                     quantity = i["args"]["itemQuantity"]
-
-                token = i["args"]["rewardItem"].lower()
-                date = txData["timestamp"]
-                if item not in Blacklist:
-                    price = queryPriceByDate(token, date)
-                    if price == 0:
-                        price = queryPriceLast(token)
-                else:
-                    price = "Unknown"
-                if currency == "eur":
-                    price = convertUSDtoEUR(price)
                 
-                if type(price) != str:
-                    balanceChange += price * quantity
-
-                #Agregar precios a la tabla
-                #print(item, price)
                 if item not in rewards:
                     rewards[item] = quantity
                 else:
@@ -523,9 +562,8 @@ def decodeQuest(result, contract, receipt, txData, currency):
             "event"    : "Quest Completed", 
             "heroIds"  : heroes, 
             "rewards"  : rewards,
-            "balanceChange": balanceChange
             }
-    elif str(result[0]) == "<Function startQuest(uint256[],address,uint8)>":
+    elif str(result[0]) == "<Function startQuest(uint256[],address,uint8)>" or str(result[0]) == "<Function startQuestWithData(uint256[],address,uint8,tuple)>":
         if str(result[1]["_questAddress"]) == '0x0548214A0760a897aF53656F4b69DbAD688D8f29':
             decode = {
             "event"    : "Start Wishing Well Quest", 
@@ -541,15 +579,22 @@ def decodeQuest(result, contract, receipt, txData, currency):
             "event"    : "Start Foraging Quest", 
             "heroIds"  : result[1]['_heroIds'],
             }
+        elif str(result[1]["_questAddress"]) == '0x569E6a4c2e3aF31B337Be00657B4C040C828Dd73':
+            decode = {
+            "event"    : "Start Mining Quest", 
+            "heroIds"  : result[1]['_heroIds'],
+            }
         elif str(result[1]["_questAddress"]) == '0xe4154B6E5D240507F9699C730a496790A722DF19':
             decode = {
             "event"    : "Start Gardening Quest", 
             "heroIds"  : result[1]['_heroIds'],
             }
+
+
     elif str(result[0]) == "<Function cancelQuest(uint256)>":
         decode = {
             "event"    : "Cancel Quest", 
-            "heroIds"  : result[1]['_heroId'],
+            "heroId"  : result[1]['_heroId'],
             }
 
     if decode == "":
@@ -559,8 +604,6 @@ def decodeQuest(result, contract, receipt, txData, currency):
 
 def decodeUniswap(result, txData):
     decode = ""
-    liquidity = False
-    contract = False
     if str(result[0]) == "<Function addLiquidityETH(address,uint256,uint256,uint256,address,uint256)>":
         if result[1]["token"] in dfk_contractsETH:
             token = dfk_contractsETH[result[1]["token"]]
@@ -573,7 +616,8 @@ def decodeUniswap(result, txData):
             "amount"   : round(result[1]['amountTokenDesired']/(10**18), 3),
             "amountOne": txData["valueOne"]
         }
-        liquidity = True
+        return decode
+
     elif str(result[0]) == "<Function addLiquidity(address,address,uint256,uint256,uint256,uint256,address,uint256)>":
         if result[1]["tokenA"] in dfk_contractsETH:
             tokenA = dfk_contractsETH[result[1]["tokenA"]]
@@ -590,7 +634,8 @@ def decodeUniswap(result, txData):
             "tokenB" : tokenB,
             "amountB": round(result[1]['amountBDesired']/(10**18), 3),
         }
-        liquidity = True
+        return decode
+
     elif str(result[0]) == "<Function removeLiquidity(address,address,uint256,uint256,uint256,address,uint256)>":
         if result[1]["tokenA"] in dfk_contractsETH:
             tokenA = dfk_contractsETH[result[1]["tokenA"]]
@@ -607,8 +652,9 @@ def decodeUniswap(result, txData):
             "tokenB" : tokenB,
             "amountB": round(result[1]['amountBMin']/(10**18), 3),
         }
-        liquidity = True
-    elif str(result[0]) == "<Function removeLiquidityETH(address,uint256,uint256,uint256,address,uint256)>":
+        return decode
+
+    elif str(result[0]) == "<Function removeLiquidityETH(address,uint256,uint256,uint256,address,uint256)>" or str(result[0]) == "<Function removeLiquidityETHSupportingFeeOnTransferTokens(address,uint256,uint256,uint256,address,uint256)>":
         if result[1]["token"] in dfk_contractsETH:
             token = dfk_contractsETH[result[1]["token"]]
         else:
@@ -620,19 +666,9 @@ def decodeUniswap(result, txData):
             "token" : token,
             "amountToken": round(result[1]['amountTokenMin']/(10**18), 3),
         }
-        liquidity = True
-    
-    if liquidity == False:
-        if result[1]["path"][0] in dfk_contractsETH:
-            contract = True
-    else:
         return decode
-    if contract == False:
-        print("Trade with Missing Contract: ", result[1]["path"][0])
-        return {
-            "event" : "Trade with Missing Contract"
-            }
     
+  
     if str(result[0]) == "<Function swapTokensForExactTokens(uint256,uint256,address[],address,uint256)>":
         if result[1]["amountOut"] > 10**12:
             amountOut = round(result[1]["amountOut"]/(10**18),3)
@@ -643,11 +679,34 @@ def decodeUniswap(result, txData):
         else:
             amountInMax = result[1]["amountInMax"]
 
+        if result[1]["path"][-1] in dfk_contractsETH:
+            tokenOut = dfk_contractsETH[result[1]["path"][-1]]
+            if dfk_contractsETH[result[1]["path"][-1]] == "DFK Gold":
+                amountOut = amountOut/1000
+            elif dfk_contractsETH[result[1]["path"][-1]] == "USDC" or tokenOut == "Tether USD":
+                amountOut = amountOut/1000000
+            elif dfk_contractsETH[result[1]["path"][-1]] == "wBTC":
+                amountOut = amountOut/100000000
+        else:
+            tokenOut = result[1]["path"][-1]
+
+        if result[1]["path"][0] in dfk_contractsETH:
+            tokenIn = dfk_contractsETH[result[1]["path"][0]]
+            if tokenIn == "DFK Gold":
+                amountInMax = amountInMax/1000
+            elif tokenIn == "USDC" or tokenIn == "Tether USD":
+                amountInMax = amountInMax/1000000
+
+            elif tokenIn == "wBTC":
+                amountInMax = amountInMax/100000000
+        else:
+            tokenIn = result[1]["path"][0]
+
         decode = {
             "event"        : "Trade",
-            "bought"       : dfk_contractsETH[result[1]["path"][-1]],
+            "bought"       : tokenOut,
             "boughtAmount" : amountOut,
-            "sold"         : dfk_contractsETH[result[1]["path"][0]],
+            "sold"         : tokenIn,
             "soldAmount"   : amountInMax
         }
     elif str(result[0]) == "<Function swapExactTokensForTokens(uint256,uint256,address[],address,uint256)>":
@@ -659,11 +718,34 @@ def decodeUniswap(result, txData):
             amountIn = round(result[1]["amountIn"]/(10**18),3)
         else:
             amountIn = result[1]["amountIn"]
+        
+        if result[1]["path"][-1] in dfk_contractsETH:
+            tokenOut = dfk_contractsETH[result[1]["path"][-1]]
+            if tokenOut == "DFK Gold":
+                amountOutMin = amountOutMin/1000
+            elif tokenOut == "wBTC":
+                amountOutMin = amountOutMin/100000000
+            elif tokenOut == "USDC" or dfk_contractsETH[result[1]["path"][-1]] == "Tether USD":
+                amountOutMin = amountOutMin/1000000
+        else:
+            tokenOut = result[1]["path"][-1]
+
+        if result[1]["path"][0] in dfk_contractsETH:
+            tokenIn = dfk_contractsETH[result[1]["path"][0]]
+            if tokenIn == "USDC" or tokenIn == "Tether USD":
+                amountIn = amountIn/1000000
+            elif tokenIn == "wBTC":
+                amountIn = amountIn/100000000
+            elif tokenIn == "DFK Gold":
+                amountIn = amountIn/1000
+        else:
+            tokenIn = result[1]["path"][0]
+
         decode = {
             "event"        : "Trade",
-            "bought"       : dfk_contractsETH[result[1]["path"][-1]],
+            "bought"       : tokenOut,
             "boughtAmount" : amountOutMin,
-            "sold"         : dfk_contractsETH[result[1]["path"][0]],
+            "sold"         : tokenIn,
             "soldAmount"   : amountIn
         }
 
@@ -672,9 +754,21 @@ def decodeUniswap(result, txData):
             amountOutMin = round(result[1]["amountOutMin"]/(10**18), 3)
         else:
             amountOutMin = result[1]["amountOutMin"]
+
+        if result[1]["path"][-1] in dfk_contractsETH:
+            token = dfk_contractsETH[result[1]["path"][-1]]
+            if token == "DFK Gold":
+                amountOutMin = amountOutMin/1000
+            elif token == "USDC" or token == "Tether USD":
+                amountOutMin = amountOutMin/1000000
+            elif token == "wBTC":
+                amountOutMin = amountOutMin/100000000
+        else:
+            token = result[1]["path"][-1]
+
         decode = {
             "event"        : "Trade",
-            "bought"       : dfk_contractsETH[result[1]["path"][-1]],
+            "bought"       : token,
             "boughtAmount" : amountOutMin,
             "sold"         : dfk_contractsETH[result[1]["path"][0]],
             "soldAmount"   : round(txData["valueOne"], 3)
@@ -685,9 +779,21 @@ def decodeUniswap(result, txData):
             amountOut = round(result[1]["amountOut"]/(10**18), 3)
         else:
             amountOut = result[1]["amountOut"]
+        
+        if result[1]["path"][-1] in dfk_contractsETH:
+            token = dfk_contractsETH[result[1]["path"][-1]]
+            if token == "DFK Gold":
+                amountOut = amountOut/1000
+            elif token == "USDC" or token == "Tether USD":
+                amountOut = amountOut/1000000
+            elif token == "wBTC":
+                amountOut = amountOut/100000000
+        else:
+            token = result[1]["path"][-1]
+
         decode = {
             "event"        : "Trade",
-            "bought"       : dfk_contractsETH[result[1]["path"][-1]],
+            "bought"       : token,
             "boughtAmount" : round(amountOut, 3),
             "sold"         : dfk_contractsETH[result[1]["path"][0]],
             "soldAmount"   : round(txData["valueOne"], 3)
@@ -702,12 +808,23 @@ def decodeUniswap(result, txData):
             amountOutMin = round(result[1]["amountOutMin"]/(10**18), 3)
         else:
             amountOutMin = result[1]["amountOutMin"]
+        
+        if result[1]["path"][0] in dfk_contractsETH:
+            token = dfk_contractsETH[result[1]["path"][0]]
+            if token == "DFK Gold":
+                amountIn = amountIn/1000
+            elif token == "USDC" or token == "Tether USD":
+                amountIn = amountIn/1000000
+            elif token == "wBTC":
+                amountIn = amountIn/100000000
+        else:
+            token = result[1]["path"][0]
 
         decode = {
             "event"        : "Trade",
             "bought"       : dfk_contractsETH[result[1]["path"][-1]],
             "boughtAmount" : amountOutMin,
-            "sold"         : dfk_contractsETH[result[1]["path"][0]],
+            "sold"         : token,
             "soldAmount"   : amountIn
         }
     elif str(result[0]) == "<Function swapTokensForExactETH(uint256,uint256,address[],address,uint256)>":
@@ -719,12 +836,23 @@ def decodeUniswap(result, txData):
             amountOut = round(result[1]["amountOut"]/(10**18), 3)
         else:
             amountOut = result[1]["amountOut"]
+        
+        if result[1]["path"][0] in dfk_contractsETH:
+            token = dfk_contractsETH[result[1]["path"][0]]
+            if token == "DFK Gold":
+                amountInMax = amountInMax/1000
+            elif token == "USDC" or dfk_contractsETH[result[1]["path"][0]] == "Tether USD":
+                amountInMax = amountInMax/1000000
+            elif token == "wBTC":
+                amountInMax = amountInMax/100000000
+        else:
+            token = result[1]["path"][0]
 
         decode = {
             "event"        : "Trade",
             "bought"       : dfk_contractsETH[result[1]["path"][-1]],
             "boughtAmount" : amountOut,
-            "sold"         : dfk_contractsETH[result[1]["path"][0]],
+            "sold"         : token,
             "soldAmount"   : amountInMax
         }
 
@@ -733,30 +861,36 @@ def decodeUniswap(result, txData):
         decode = {"event": "Transaction Failed"}
     return decode
 
-def generate_report(address, startTime, endTime, currency, page):
+def generate_report(address, startTime, endTime, currency, page, hashes):
+    pageSize = 50
     txs_history = {}
-    txs = account.get_transaction_history(address, page=page, page_size=10, include_full_tx=False, tx_type='ALL', order='DESC', endpoint=main_net)
-    c=1+page*10
-
-    # balance Sheet debe tener como key los nombres de los items
-    # y como value una tupla cantidad
+    balanceSheet = {}
+    txsProcessed = []
+    status = "on"
+    c=len(hashes)+1
     balanceSheet = defaultdict(int)
 
+    txs = account.get_transaction_history(address, page=page, page_size=pageSize, include_full_tx=True, tx_type='ALL', order='DESC', endpoint=main_net)
+    if len(txs) == 0:
+        status = "finished"
 
-    for tx_hash in txs:
-        tx = transaction.get_transaction_by_hash(tx_hash, main_net)
+    for tx in txs:
         contract_name = DFKContract(tx)
         if int(tx["timestamp"], 16) < startTime:
-            continue
-        elif int(tx["timestamp"], 16) > endTime:
+            status = "finished"
             break
+        elif int(tx["timestamp"], 16) > endTime:
+            continue
         elif contract_name == "Unknown Contract":
             continue
-        txData = {
-            "chain" : "Harmony"
-        }
+        elif tx["hash"] in txsProcessed:
+            continue
+        elif tx["hash"] in hashes:
+            continue
+        else:
+            txsProcessed.append(tx["hash"])
 
-
+        txData = {"chain" : "Hmy"}
         txData["hash"] = tx["hash"]
         txData["from"] = tx["from"]
         txData["to"] = tx["to"]
@@ -768,16 +902,19 @@ def generate_report(address, startTime, endTime, currency, page):
         txData["gasPaidCurrency"] = getValueOnetoCurrency(txData["gasPaid"], currency, txData["timestamp"])
 
         balanceChange = getBalanceChange(txData["txType"], txData["timestamp"], currency)
-        balanceChange["Currency"] -= txData["gasPaidCurrency"]
+        balanceChange["Gas"] = (txData["gasPaid"], txData["gasPaidCurrency"])
 
         txData["balanceChange"] = balanceChange
         txs_history[c] = txData
         c+=1
 
         for key, value in balanceChange.items():
-            balanceSheet[key] += value
+            if key in balanceSheet:
+                balanceSheet[key] = (round(balanceSheet[key][0]+value[0], 5), round(balanceSheet[key][1]+value[1], 5))
+            else:
+                balanceSheet[key] = (round(value[0], 5), round(value[1], 5))
 
-    return {"txs": txs_history, "balanceSheet": balanceSheet}
+    return {"txs": txs_history, "balanceSheet": balanceSheet, "status": status}
 
 def getBalances(address, currency):
     balances = {}
@@ -791,8 +928,10 @@ def getBalances(address, currency):
         if key == "JewelToken":
             jewelBalance = round(token_balance/(10**18), 3)
             balances[key] = (jewelBalance, round(getValueJeweltoCurrency(jewelBalance, currency, "last"),3))
+        elif key == "DFK Gold":
+            balances[key] = (token_balance/1000, getLastValueItemtoCurrency(convert_one_to_hex(value), currency)*(token_balance/1000))
         else:
-            balances[key] = (token_balance, getLastValueItemtoCurrency(convert_one_to_hex(value), token_balance, currency))
+            balances[key] = (token_balance, getLastValueItemtoCurrency(convert_one_to_hex(value), currency)*token_balance)
     return {"currentBalance": balances}
 
 def updateData():
@@ -822,7 +961,12 @@ async def transactionReport():
     end = data["endTime"]
     currency = data["currency"]
     page = data["page"]
-    return generate_report(address, start, end, currency, page)
+    hashes = data["hashes"]
+    #try:
+    return generate_report(address, start, end, currency, page, hashes)
+    #except:
+        #print("Error generating report")
+        #return {"txs": {}, "balanceSheet": {}, "status": "error"}
 
 @app.route("/currentBalance", methods=['GET', "POST"])
 async def currentBalance():
@@ -832,7 +976,7 @@ async def currentBalance():
     return getBalances(address, currency)
 
 
-#updateData()
+updateData()
 url = "http://graph3.defikingdoms.com/subgraphs/name/defikingdoms/dex"
 urlAuctionHouse = "http://graph3.defikingdoms.com/subgraphs/name/defikingdoms/apiv5"
 headers = {

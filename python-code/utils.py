@@ -1,6 +1,7 @@
 import json
 import requests
 from eth_utils import to_checksum_address
+from math import floor
 from pyhmy import blockchain, transaction, account
 from bech32 import (
     bech32_decode,
@@ -18,7 +19,7 @@ dfk_contracts = {
     "Airdrop"                     : "one15eudryl7e3nhuym6qrl0ksafenl62vsszleqj2",
     "Profiles"                    : "one14028gx2gxa937hw4m46entqlsk35etxaln7glh",
     "Hero"                        : "one1ta6nmn0ekxke427px3npf505w3hadnjuhlh7vv",
-    "Gaia's Tears"                : "one1yn4q6smd8snq97l7l0n2z6auxpxfv0gyvfd7gr",
+    "Gaias Tears"                 : "one1yn4q6smd8snq97l7l0n2z6auxpxfv0gyvfd7gr",
     "DFK Gold"                    : "one18f8deue39azw7qn6elvvyyuz55jejdh8xdfdw2",
     "Ambertaffy"                  : "one1dcduq8x995t9kdtuggzzeasgzkdzhqwpmxtseg",
     "Darkweed"                    : "one1dr4yvsx9eekvpjdp79ahhzpvk8974nxhfufs5f",
@@ -58,7 +59,7 @@ dfk_contractsETH = {
     "0x3a4EDcf3312f44EF027acfd8c21382a5259936e7" : "DFK Gold",
 
     '0x66F5BfD910cd83d3766c4B39d13730C911b2D286' : "Shvas Rune",
-    "0x24eA0D436d3c2602fbfEfBe6a16bBc304C963D04" : "Gaia's Tears",
+    "0x24eA0D436d3c2602fbfEfBe6a16bBc304C963D04" : "Gaias Tears",
     "0x95d02C1Dc58F05A015275eB49E107137D9Ee81Dc" : "Grey Pet Egg",
     "0x9678518e04fe02fb30b55e2d0e554e26306d0892" : "Blue Pet Egg",
     "0x6d605303e9Ac53C59A3Da1ecE36C9660c7A71da5" : "Green Pet Egg",
@@ -86,7 +87,9 @@ dfk_contractsETH = {
 
 dfk_contracts_tokens = {
     "JewelToken"                  : "one1wt93p34l543ym5r77cyqyl3kd0tfqpy0eyd6n0",
-    "Gaia's Tears"                : "one1yn4q6smd8snq97l7l0n2z6auxpxfv0gyvfd7gr",
+    "Jewel"                       : "one1wt93p34l543ym5r77cyqyl3kd0tfqpy0eyd6n0",
+    "One"                         : "one1eanyppa9hvpr0g966e6zs5hvdjxkngn6jtulua",
+    "Gaias Tears"                 : "one1yn4q6smd8snq97l7l0n2z6auxpxfv0gyvfd7gr",
     "DFK Gold"                    : "one18f8deue39azw7qn6elvvyyuz55jejdh8xdfdw2",
     "Ambertaffy"                  : "one1dcduq8x995t9kdtuggzzeasgzkdzhqwpmxtseg",
     "Darkweed"                    : "one1dr4yvsx9eekvpjdp79ahhzpvk8974nxhfufs5f",
@@ -109,6 +112,27 @@ dfk_contracts_tokens = {
     "Hero"                        : "one1ta6nmn0ekxke427px3npf505w3hadnjuhlh7vv"
 }
 
+dfk_item_symbol = {
+    "Jewel"        : "JEWEL",
+    "Gaias Tears"  : "DFKTEARS",
+    "DFK Gold"     : "DFKGOLD",
+    "Ambertaffy"   : "DFKAMBRTFY",
+    "Darkweed"     : "DFKDRKWD",
+    "Goldvein"     : "DFKGLDVN",
+    "Ragweed"      : "DFKRGWD",
+    "Redleaf"      : "DFKRDLF",
+    "Rockroot"     : "DFKRCKRT",
+    "Swift-Thistle": "DFKSWFTHSL",
+    "Bloater"      : "DFKBLOATER",
+    "Ironscale"    : "DFKIRONSCALE",
+    "Lanterneye"   : "DFKLANTERNEYE",
+    "Redgill"      : "DFKREDGILL",
+    "Sailfish"     : "DFKSAILFISH",
+    "Shimmerskin"  : "DFKSHIMMERSKIN",
+    "Silverfin"    : "DFKSILVERFIN",
+    "Shvas Rune"   : "DFKSHVAS"
+}
+
 Blacklist = [
     "Green Pet Egg",
     "Grey Pet Egg",
@@ -125,6 +149,19 @@ headers = {
     'Content-Type': 'application/json',
     'User-Agent': 'Mozilla/5.0'
 }
+AVAXurl = "127.0.0.1:9650/ext/bc/X"
+
+def AVAX_get_transaction_history(address, page, pageSize, assetID):
+    method = "avm.getAddressTxs"
+    params ={
+      "address" : address,
+      "cursor"  : page,
+      "assetID" : assetID,
+      "pageSize": pageSize
+  }
+    payload = json.dumps({"method": method, "params": params})
+    r = requests.post(AVAXurl, data=payload, headers=headers)
+    print(r)
 
 def getValueOnetoCurrency(amount, currency, timestamp):
     if currency == "usd":
@@ -162,26 +199,28 @@ def getValueJeweltoCurrency(amount, currency, timestamp):
     value = jewelPrice["prices"][-1][1]*amount
     return round(value, 5)
 
-def getLastValueItemtoCurrency(token, amount, currency):
+def getLastValueItemtoCurrency(token, currency):
     if currency == "usd":
         if token in dfk_contractsETH:
             if dfk_contractsETH[token] not in Blacklist:
-                value = queryPriceLast(token.lower())*amount
+                value = queryPriceByDateJSON(dfk_contractsETH[token], "last")
+                #value = queryPriceLast(token.lower())
                 return round(value, 3)
             else:
-                return "?"
+                return 0
         else:
-            return "?"
+            return 0
     elif currency == "eur":
         if token in dfk_contractsETH:
             if dfk_contractsETH[token] not in Blacklist:
-                valueUSD = queryPriceLast(token.lower())*amount
+                valueUSD = queryPriceByDateJSON(dfk_contractsETH[token], "last")
+                #valueUSD = queryPriceLast(token.lower())
                 value = convertUSDtoEUR(valueUSD)
                 return round(value, 3)
             else:
-                return "?"
+                return 0
         else:
-            return "?"
+            return 0
 
 def convertUSDtoEUR(valueUSD):
     #Mejorar para que utilize los precios USD/EUR del momento y no solo los mas actuales!
@@ -268,62 +307,208 @@ def convert_one_to_hex(addr):
     return to_checksum_address(address)
 
 def getBalanceChange(transaction_info, timestamp, currency):
-    balanceChange = {"Currency": 0}
+    balanceChange = {}
     if transaction_info["event"] == "Quest Completed":
-        balanceChange = {
-            "Currency": transaction_info["balanceChange"] 
-        }
-        for key, quantity in transaction_info["rewards"].items():
-            balanceChange[key] = quantity
+        balanceChange = {}
+        for key, value in transaction_info["rewards"].items():
+            if key not in Blacklist:
+                    price = queryPriceByDateJSON(key, timestamp)
+            else:
+                price = 0
+            if currency == "eur":
+                price = convertUSDtoEUR(price)
+            balanceChange[key] = [value, price*value]
 
 
     elif transaction_info["event"] == "Claim LP rewards":
-        gains = getValueJeweltoCurrency(
+        gainsJewel = getValueJeweltoCurrency(
             transaction_info["unlockedAmount"], 
             currency, 
             timestamp)
         balanceChange = {
-            "Currency": gains ,
-            "Jewel": transaction_info["unlockedAmount"]
+            "Jewel": [transaction_info["unlockedAmount"], gainsJewel]
         }
 
     
     elif transaction_info["event"] == "Trade":
+        gains = 0
+
+        if (transaction_info["bought"] == "One"):
+            gains = getValueOnetoCurrency(
+                transaction_info["boughtAmount"], 
+                currency, 
+                timestamp)
+        elif (transaction_info["bought"] == "Jewel"):
+            gains = getValueJeweltoCurrency(
+                transaction_info["boughtAmount"], 
+                currency, 
+                timestamp)
+        elif (transaction_info["sold"] == "One"):
+            gains = getValueOnetoCurrency(
+                transaction_info["boughtAmount"], 
+                currency, 
+                timestamp)
+        elif (transaction_info["sold"] == "Jewel"):
+            gains = getValueJeweltoCurrency(
+                transaction_info["soldAmount"], 
+                currency, 
+                timestamp)
+            
         balanceChange = {
-            "Currency": 0 ,
-            transaction_info["sold"]: -1 * transaction_info["soldAmount"],
-            transaction_info["bought"]: transaction_info["boughtAmount"]
+            transaction_info["sold"]: [-1*transaction_info["soldAmount"], -1*gains],
+            transaction_info["bought"]: [transaction_info["boughtAmount"], gains]
+        }
+    
+    elif transaction_info["event"] == "transfer Jewel":
+        gainsJewel = getValueJeweltoCurrency(
+            transaction_info["amount"], 
+            currency, 
+            timestamp)
+            
+        balanceChange = {
+            "Jewel"   : [-1*transaction_info["amount"], -1*gainsJewel]
         }
 
     elif transaction_info["event"] == "Create Auction":
         if transaction_info["status"] != "sold":
-            return { "Currency": 0 }
+            return { }
         
-        gains = getValueJeweltoCurrency(
+
+        gainsJewel = getValueJeweltoCurrency(
             transaction_info["price"], 
             currency, 
             timestamp)
+
         balanceChange = {
-            "Currency":  gains,
-            "Jewel": transaction_info["price"]
+            "Jewel": [transaction_info["price"], gainsJewel]
         }
 
     elif transaction_info["event"] == "Bought Hero":
         
-        gains = getValueJeweltoCurrency(
+        gainsJewel = getValueJeweltoCurrency(
             transaction_info["price"], 
             currency, 
             timestamp)
+
         balanceChange = {
-            "Currency": -1*gains,
-            "Jewel": -1*transaction_info["price"]
+            "Jewel": [-1*transaction_info["price"], -1*gainsJewel]
         }
 
     elif transaction_info["event"] == "Summon Crystal":
+        gainsJewel = getValueJeweltoCurrency(
+            transaction_info["amountJewel"], 
+            currency, 
+            timestamp) 
+
+        gainsTears = queryPriceByDateJSON("Gaias Tears", timestamp)
+        if currency == "eur":
+            gainsTears = convertUSDtoEUR(gainsTears)
+        
+        
+        tearAmount = transaction_info["summonerTears"] + transaction_info["assistantTears"]
+        
+        balanceChange = {
+            "Gaias Tears": [-1*tearAmount, -1*gainsTears*tearAmount],
+            "Jewel"      : [-1*transaction_info["amountJewel"], -1*gainsJewel]
+        }
+    
+    elif transaction_info["event"] == "Start Meditation":
+        gainsJewel = getValueJeweltoCurrency(
+            transaction_info["amountJewel"], 
+            currency, 
+            timestamp)
+
+        gainsRune = queryPriceByDateJSON(transaction_info["rune"], timestamp)
+        if currency == "eur":
+            gainsRune = convertUSDtoEUR(gainsRune)
 
         balanceChange = {
-            "Currency": 0,
-            "Tears": -1*transaction_info["summonerTears"] - transaction_info["assistantTears"]
+            transaction_info["rune"]   : [-1*transaction_info["amountRune"], -1*gainsRune*transaction_info["amountRune"]],
+            "Jewel"                    : [-1*transaction_info["amountJewel"], -1*gainsJewel]
         }
     
     return balanceChange
+
+def queryHeroLevel(id, block):
+    query = """
+        query ($id: Int $blockNumber: Int) { 
+            hero (id: $id block: {number: $blockNumber}) {
+                level
+            }
+        }  
+    """
+    variables = {
+        "id": id, 
+        "blockNumber": block
+    }
+    r = requests.post(urlAuctionHouse, json={'query': query, "variables": variables}, headers=headers)
+    try:
+        return r.json()["data"]["hero"]["level"]
+    except:
+        return "Error"
+
+def queryHeroSummons(id, block):
+    query = """
+        query ($id: Int $blockNumber: Int) { 
+            hero (id: $id block: {number: $blockNumber}) {
+                generation
+                summons
+            }
+        }  
+    """
+    variables = {
+        "id": id, 
+        "blockNumber": block
+    }
+    r = requests.post(urlAuctionHouse, json={'query': query, "variables": variables}, headers=headers)
+    try:
+        return (r.json()["data"]["hero"]["generation"], r.json()["data"]["hero"]["summons"])
+    except: 
+        return "Error"
+
+def checkCostLevel(level):
+    if level > 0 and level < 10:
+        return [0.1*level, "Shvas Rune", floor(level/2)+1]
+    else:
+        return [0,"No Rune",0]
+
+def checkCostSummons(generation, summons):
+    if generation == 0:
+        baseCost = 6
+    else:
+        baseCost = 10*generation
+    return baseCost+summons*2
+
+def queryPriceByDateJSON(item, date):
+    item_price = 0
+    symbol = dfk_item_symbol[item]
+    priceJSON = open(f"items/{symbol}.json")
+    priceData = json.load(priceJSON)
+    if date == "last":
+        return float(priceData["1640660400"])
+    for key, value in priceData.items():
+        if date>int(key):
+            item_price = float(value)
+            break
+    if item_price == 0:
+        return float(priceData["1640660400"])
+    return round(item_price, 5)
+
+def get_transactions_count(address, tx_type, endpoint):
+    method = 'hmyv2_getTransactionsCount'
+    params = [
+        address,
+        tx_type
+    ]
+    payload = {
+        "id": "1",
+        "jsonrpc": "2.0",
+        "method": method,
+        "params": params
+    }
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    resp = requests.request('POST', endpoint, headers=headers, data=json.dumps(payload), allow_redirects=True)
+    return int(resp.json()["result"])
