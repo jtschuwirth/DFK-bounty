@@ -111331,10 +111331,11 @@ window.onload = /*#__PURE__*/function () {
   }
 
   return initialize;
-}();
+}(); //const API_URL = "http://192.168.0.2:5000/"
+//const API_URL = "http://localhost:5000/"
 
-var API_URL = "http://192.168.0.2:5000/"; //const API_URL = "http://localhost:5000/"
-//const API_URL = "https://jtschuwirth.xyz/"
+
+var API_URL = "https://jtschuwirth.xyz/";
 
 function App() {
   var _useState = (0, _react.useState)("mainmenu"),
@@ -111457,9 +111458,7 @@ function Menu(props) {
 
   function handleSubmit(event) {
     event.preventDefault();
-    var harmonyAddress = getAddress(currentValue).bech32; //let harmonyAddress = getAddress("one1se7lv0g7athe8xzz2rmckj7c83cx2twwks52kj").bech32;
-    //let harmonyAddress = getAddress("0xa8c5115c8e44351b2bc2d401a1f033bb45129dc5").bech32;
-
+    var harmonyAddress = getAddress(currentValue).bech32;
     props.setAddress(harmonyAddress);
     setQuery([harmonyAddress, props.currentStartDay, props.CurrentEndDay, currentCurrency]);
     setDisplayCurrency(currentCurrency);
@@ -111501,7 +111500,7 @@ function Menu(props) {
                 balance = [];
                 balanceSheet = [];
                 hashes = [];
-                _context2.next = 55;
+                _context2.next = 56;
                 break;
 
               case 11:
@@ -111522,11 +111521,11 @@ function Menu(props) {
                 }
 
                 setCurrentBalance(balance);
-                _i = 0;
+                _i = 1000;
 
               case 18:
-                if (!(_i < 1000)) {
-                  _context2.next = 54;
+                if (!(_i >= 0)) {
+                  _context2.next = 55;
                   break;
                 }
 
@@ -111537,28 +111536,30 @@ function Menu(props) {
                   endTime: end,
                   currency: currency,
                   page: _i,
-                  hashes: hashes
+                  hashes: hashes,
+                  balances: balanceSheet
                 });
 
               case 21:
                 _result = _context2.sent;
+                _i = _result.data.page;
 
                 if (!(_result.data.status == "finished")) {
-                  _context2.next = 26;
+                  _context2.next = 27;
                   break;
                 }
 
-                return _context2.abrupt("break", 54);
+                return _context2.abrupt("break", 55);
 
-              case 26:
+              case 27:
                 if (!(_result.data.status == "error")) {
-                  _context2.next = 28;
+                  _context2.next = 29;
                   break;
                 }
 
-                return _context2.abrupt("break", 54);
+                return _context2.abrupt("break", 55);
 
-              case 28:
+              case 29:
                 txs = _result.data.txs;
 
                 for (_i2 = 0; _i2 < Object.values(txs).length; _i2++) {
@@ -111572,9 +111573,9 @@ function Menu(props) {
                 });
                 _i3 = 0;
 
-              case 32:
+              case 33:
                 if (!(_i3 < Object.keys(_result.data.balanceSheet).length)) {
-                  _context2.next = 50;
+                  _context2.next = 51;
                   break;
                 }
 
@@ -111586,49 +111587,49 @@ function Menu(props) {
                 });
                 _context2.t0 = _regenerator["default"].keys(balanceSheet);
 
-              case 38:
+              case 39:
                 if ((_context2.t1 = _context2.t0()).done) {
-                  _context2.next = 46;
+                  _context2.next = 47;
                   break;
                 }
 
                 j = _context2.t1.value;
 
                 if (!(balanceSheet[j][0].toString() == name.toString())) {
-                  _context2.next = 44;
+                  _context2.next = 45;
                   break;
                 }
 
                 balanceSheet[j] = [name, [balanceSheet[j][1][0] + value[0], balanceSheet[j][1][1] + value[1]]];
                 logrado = true;
-                return _context2.abrupt("break", 46);
+                return _context2.abrupt("break", 47);
 
-              case 44:
-                _context2.next = 38;
+              case 45:
+                _context2.next = 39;
                 break;
 
-              case 46:
+              case 47:
                 if (logrado == false) {
                   balanceSheet.push([name, value]);
                 }
 
-              case 47:
+              case 48:
                 _i3++;
-                _context2.next = 32;
+                _context2.next = 33;
                 break;
 
-              case 50:
+              case 51:
                 setSheet((0, _toConsumableArray2["default"])(balanceSheet));
 
-              case 51:
-                _i++;
+              case 52:
+                _i--;
                 _context2.next = 18;
                 break;
 
-              case 54:
+              case 55:
                 setLoading(false);
 
-              case 55:
+              case 56:
               case "end":
                 return _context2.stop();
             }
@@ -111739,7 +111740,7 @@ function Menu(props) {
       className: "center"
     }, /*#__PURE__*/_react["default"].createElement("h2", null, "Transaction History")), /*#__PURE__*/_react["default"].createElement("div", {
       className: "center"
-    }, "Transactions are fetched in batches of 50, it takes a while to make the full report, please be patient"), /*#__PURE__*/_react["default"].createElement("div", {
+    }, "Transactions are fetched in batches of 100, it takes a while to make the full report, please be patient"), /*#__PURE__*/_react["default"].createElement("div", {
       className: "center"
     }, "Summoning and Meditation cost are dependant on the Defi Kingdoms Api which might not be up to date, in which case the cost of runes and jewels will default to 0"), /*#__PURE__*/_react["default"].createElement(_reactBootstrap.Dropdown, null, /*#__PURE__*/_react["default"].createElement(_reactBootstrap.Dropdown.Toggle, {
       variant: "success",

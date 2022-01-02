@@ -1,0 +1,2 @@
+docker build -t flaskapi:latest .
+docker run -p 5000:5000 flaskapi:latest

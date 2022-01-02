@@ -12,9 +12,9 @@ window.onload = async function initialize() {
         document.getElementById('app'));
 }
 
-const API_URL = "http://192.168.0.2:5000/"
+//const API_URL = "http://192.168.0.2:5000/"
 //const API_URL = "http://localhost:5000/"
-//const API_URL = "https://jtschuwirth.xyz/"
+const API_URL = "https://jtschuwirth.xyz/"
 
 function App() {
     const [currentMenu, setMenu] = useState("mainmenu");
@@ -76,8 +76,6 @@ function Menu(props) {
     function handleSubmit(event) {
         event.preventDefault();
         let harmonyAddress = getAddress(currentValue).bech32;
-        //let harmonyAddress = getAddress("one1se7lv0g7athe8xzz2rmckj7c83cx2twwks52kj").bech32;
-        //let harmonyAddress = getAddress("0xa8c5115c8e44351b2bc2d401a1f033bb45129dc5").bech32;
         props.setAddress(harmonyAddress);
         setQuery([harmonyAddress, props.currentStartDay, props.CurrentEndDay, currentCurrency])
         setDisplayCurrency(currentCurrency)
@@ -119,15 +117,17 @@ function Menu(props) {
                     }
                 }
                 setCurrentBalance(balance)
-                for (let i = 0; i<1000; i++) {
+                for (let i = 1000; i>=0; i--) {
                     const result = await axios.post(API_URL+"transactionReport", {
                         address   : address,
                         startTime : start,
                         endTime   : end,
                         currency  : currency,
                         page      : i,
-                        hashes    : hashes
+                        hashes    : hashes,
+                        balances  : balanceSheet
                     })
+                    i = result.data.page
                     if (result.data.status == "finished") {
                         break
                     } else if (result.data.status == "error") {
@@ -245,7 +245,7 @@ function Menu(props) {
                     <div className="center"><h2>Current Gains/Losses ({displayCurrency}): {currentSheet.reduce((a, b) => a + b[1][1], 0).toFixed(3)}</h2></div>
                     <br></br>
                     <div className="center"><h2>Transaction History</h2></div>
-                    <div className="center">Transactions are fetched in batches of 50, it takes a while to make the full report, please be patient</div>
+                    <div className="center">Transactions are fetched in batches of 100, it takes a while to make the full report, please be patient</div>
                     <div className="center">Summoning and Meditation cost are dependant on the Defi Kingdoms Api which might not be up to date, in which case the cost of runes and jewels will default to 0</div>
                     <Dropdown>
                         <Dropdown.Toggle variant="success" id="dropdown-basic">

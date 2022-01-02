@@ -8,7 +8,7 @@ from flask_cors import CORS
 from collections import defaultdict
 from math import ceil
 
-from utils import (
+from cambios_balance.utils import (
     convert_one_to_hex,
     queryAuctionStatus,
     queryPriceByDate,
@@ -194,12 +194,7 @@ dfk_contracts_abi = {
     "Shvas Rune"         : ERC721ABI,
     "Blue Pet Egg"       : ERC721ABI,
     "Grey Pet Egg"       : ERC721ABI,
-    "Green Pet Egg"      : ERC721ABI,
-    "Yellow Pet Egg"     : ERC721ABI,
-    "Golden Egg"         : ERC721ABI,
-    "Blue Stem"          : ERC721ABI,
-    "Spiderfruit"        : ERC721ABI,
-    "Milkweed"           : ERC721ABI
+    "Golden Egg"         : ERC721ABI
 }
 
 dfk_contracts_tokens = {
@@ -223,21 +218,18 @@ dfk_contracts_tokens = {
     "Shvas Rune"                  : "one1vm6mlkgsekpaxanvfvuazdeseygm955x5cx9pr",
     "Blue Pet Egg"                : "one1jeu9rrsylcp0kv94tcksu42wyccx6zyj7xfvzm",
     "Grey Pet Egg"                : "one1jhgzc8w93uz6q9f8t66fuyr3xlv7aqwufwkmqs",
-    "Yellow Pet Egg"              : "one18kcl6zk50xjxy953javpgn73tgsu86fu3tfr9p",
-    "Green Pet Egg"               : "one1d4s9xqlf43futx3a58kwxmykvrr6w8d9acegmg",
     "Golden Egg"                  : "one1nmdnmgvtujcrs4ln6w0c8ewx4tt8hs2gangmff",
-    "Hero"                        : "one1ta6nmn0ekxke427px3npf505w3hadnjuhlh7vv",
-    "Blue Stem"                   : "one143wynlm7sy77r9raca9mk9eqcdfs0xkf9zaq2l",
-    "Milkweed"                    : "one1cqs5kdlu6q23re3g8t65y08jfjtthxqgmtk8kr",
-    "Spiderfruit"                 : "one1rxulqhx70fs6k74wtv8djx4x9l63e7yp9s0ez8"
+    "Hero"                        : "one1ta6nmn0ekxke427px3npf505w3hadnjuhlh7vv"
 }
 
 Blacklist = [
     "Green Pet Egg",
     "Grey Pet Egg",
     "Blue Pet Egg",
-    "Yellow Pet Egg",
     "Golden Egg",
+    "Blue Stem",
+    "Milkweed",
+    "Spiderfruit"
 ]
 
 def DFKContract(tx):
@@ -559,8 +551,6 @@ def decodeQuest(result, contract, receipt, txData, currency):
                 item = dfk_contractsETH[i["args"]["rewardItem"]]
                 if item == "Jewel":
                     quantity = round(i["args"]["itemQuantity"]/(10**18),5)
-                elif item == "DFK Gold":
-                    quantity = round(i["args"]["itemQuantity"]/(1000),5)
                 else:
                     quantity = i["args"]["itemQuantity"]
 
@@ -605,10 +595,6 @@ def decodeQuest(result, contract, receipt, txData, currency):
         decode = {
             "event"    : "Cancel Quest", 
             "heroId"  : result[1]['_heroId'],
-            }
-    elif str(result[0]) == "<Function cleanQuests()>":
-        decode = {
-            "event"    : "Clean Quest", 
             }
 
     if decode == "":
@@ -876,11 +862,10 @@ def decodeUniswap(result, txData):
     return decode
 
 def generate_report(address, startTime, endTime, currency, page, hashes, balances):
-    pageSize = 100
+    pageSize = 50
     txs_history = {}
     balanceSheet = {}
     txsProcessed = []
-    valid_tx = []
     status = "on"
     balanceSheet = defaultdict(int)
 
@@ -889,29 +874,20 @@ def generate_report(address, startTime, endTime, currency, page, hashes, balance
         page = ceil(tx_count/pageSize)
 
     c=len(hashes)+1
-    while page>=0:
-        txs = account.get_transaction_history(address, page=page, page_size=pageSize, include_full_tx=True, tx_type='ALL', order='DESC', endpoint=main_net)
-        for tx in txs[::-1]:
-            contract_name = DFKContract(tx)
-            if int(tx["timestamp"], 16) < startTime:
-                continue
-            elif int(tx["timestamp"], 16) > endTime:
-                status = "finished"
-                break
-            elif contract_name == "Unknown Contract":
-                continue
-            else:
-                valid_tx.append(tx)
-        if len(valid_tx) == 0:
-            page-=1
-        else:
-            break
+    txs = account.get_transaction_history(address, page=page, page_size=pageSize, include_full_tx=True, tx_type='ALL', order='DESC', endpoint=main_net)
 
 
 
-    for tx in valid_tx:
+    for tx in txs[::-1]:
         contract_name = DFKContract(tx)
-        if tx["hash"] in txsProcessed:
+        if int(tx["timestamp"], 16) < startTime:
+            continue
+        elif int(tx["timestamp"], 16) > endTime:
+            status = "finished"
+            break
+        elif contract_name == "Unknown Contract":
+            continue
+        elif tx["hash"] in txsProcessed:
             continue
         elif tx["hash"] in hashes:
             continue
@@ -933,19 +909,14 @@ def generate_report(address, startTime, endTime, currency, page, hashes, balance
         balanceChange["Gas"] = (-1*txData["gasPaid"], -1*txData["gasPaidCurrency"])
 
         txData["balanceChange"] = balanceChange
-
         txs_history[c] = txData
         c+=1
 
         for key, value in balanceChange.items():
             if key in balanceSheet:
-                balanceSheet[key] = [round(balanceSheet[key][0]+value[0], 5), round(balanceSheet[key][1]+value[1], 5)]
-                for i in balances:
-                    if i[0] == key:
-                        i[1] = [round(i[1][0]+value[0], 5), round(i[1][1]+value[1], 5)]
+                balanceSheet[key] = (round(balanceSheet[key][0]+value[0], 5), round(balanceSheet[key][1]+value[1], 5))
             else:
-                balanceSheet[key] = [round(value[0], 5), round(value[1], 5)]
-                balances.append([key, [round(value[0], 5), round(value[1], 5)]])
+                balanceSheet[key] = (round(value[0], 5), round(value[1], 5))
     return {"txs": txs_history, "balanceSheet": balanceSheet, "status": status, "page": page}
 
 def getBalances(address, currency):

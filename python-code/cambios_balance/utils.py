@@ -88,6 +88,7 @@ dfk_contractsETH = {
 dfk_contracts_tokens = {
     "JewelToken"                  : "one1wt93p34l543ym5r77cyqyl3kd0tfqpy0eyd6n0",
     "Jewel"                       : "one1wt93p34l543ym5r77cyqyl3kd0tfqpy0eyd6n0",
+    "One"                         : "one1eanyppa9hvpr0g966e6zs5hvdjxkngn6jtulua",
     "Gaias Tears"                 : "one1yn4q6smd8snq97l7l0n2z6auxpxfv0gyvfd7gr",
     "DFK Gold"                    : "one18f8deue39azw7qn6elvvyyuz55jejdh8xdfdw2",
     "Ambertaffy"                  : "one1dcduq8x995t9kdtuggzzeasgzkdzhqwpmxtseg",
@@ -129,16 +130,16 @@ dfk_item_symbol = {
     "Sailfish"     : "DFKSAILFISH",
     "Shimmerskin"  : "DFKSHIMMERSKIN",
     "Silverfin"    : "DFKSILVERFIN",
-    "Shvas Rune"   : "DFKSHVAS",
-    "Blue Stem"    : "DFKBLUESTEM",
-    "Milkweed"     : "DFKMILKWEED",
-    "Spiderfruit"  : "DFKSPIDRFRT"
+    "Shvas Rune"   : "DFKSHVAS"
 }
 
 Blacklist = [
     "Green Pet Egg",
     "Grey Pet Egg",
     "Blue Pet Egg",
+    "Blue Stem",
+    "Milkweed",
+    "Spiderfruit"
 ]
 
 url = "http://graph3.defikingdoms.com/subgraphs/name/defikingdoms/dex"
@@ -308,6 +309,7 @@ def convert_one_to_hex(addr):
 def getBalanceChange(transaction_info, timestamp, currency, balances):
     balanceChange = {}
     if transaction_info["event"] == "Quest Completed":
+        balanceChange = {}
         for key, value in transaction_info["rewards"].items():
             if key not in Blacklist:
                     price = queryPriceByDateJSON(key, timestamp)
@@ -319,93 +321,55 @@ def getBalanceChange(transaction_info, timestamp, currency, balances):
 
 
     elif transaction_info["event"] == "Claim LP rewards":
-        gainsJewel = queryPriceByDateJSON("Jewel", timestamp)
-        if currency == "eur":
-                gainsJewel = convertUSDtoEUR(gainsJewel)
-
+        gainsJewel = getValueJeweltoCurrency(
+            transaction_info["unlockedAmount"], 
+            currency, 
+            timestamp)
         balanceChange = {
-            "Jewel": [transaction_info["unlockedAmount"], gainsJewel*transaction_info["unlockedAmount"]]
+            "Jewel": [transaction_info["unlockedAmount"], gainsJewel]
         }
 
     
     elif transaction_info["event"] == "Trade":
-        stable_coins = ["BUSD", "USD Tether", "USDC", "BUSD Token", "wUST"]
         bought = 0
         sold = 0
-        not_in_balances = True
 
-        if transaction_info["sold"] in stable_coins:
-            sold = transaction_info["soldAmount"]
-            bought = sold
-            balanceChange = {
-                transaction_info["sold"]: [-1*transaction_info["soldAmount"], -1*sold],
-                transaction_info["bought"]: [transaction_info["boughtAmount"], bought]
-            }
-            return balanceChange
-
-        for i in balances:
-            if len(balances) != 0 and i[0] == transaction_info["sold"]:
-                not_in_balances = False
-                quantity = i[1][0]
-                break
-
-        if not_in_balances or quantity <= 0:
-            if transaction_info["bought"] == "One":
-                gains = getValueOnetoCurrency(
-                    transaction_info["boughtAmount"], 
-                    currency, 
-                    timestamp)
-            elif transaction_info["sold"] == "One":
-                gains = getValueOnetoCurrency(
-                    transaction_info["soldAmount"],
-                    currency, 
-                    timestamp)
-            elif transaction_info["bought"] in dfk_item_symbol:
-                gains = queryPriceByDateJSON(transaction_info["bought"], timestamp)*transaction_info["boughtAmount"]
-                if currency == "eur":
-                        gains = convertUSDtoEUR(bought)
-            elif transaction_info["sold"] in dfk_item_symbol:
-                gains = queryPriceByDateJSON(transaction_info["sold"], timestamp)*transaction_info["soldAmount"]
-                if currency == "eur":
-                        gains = convertUSDtoEUR(sold)
-            balanceChange = {
-                transaction_info["sold"]: [-1*transaction_info["soldAmount"], -1*gains],
-                transaction_info["bought"]: [transaction_info["boughtAmount"], gains]
-            }
-            return balanceChange
-            
-
-
-        if transaction_info["bought"] == "One":
+        if (transaction_info["bought"] == "One"):
             bought = getValueOnetoCurrency(
                 transaction_info["boughtAmount"], 
                 currency, 
                 timestamp)
-        elif transaction_info["bought"] in stable_coins:
-            bought = transaction_info["boughtAmount"]
-        elif transaction_info["bought"] in dfk_item_symbol:
-            bought = queryPriceByDateJSON(transaction_info["bought"], timestamp)*transaction_info["boughtAmount"]
-            if currency == "eur":
-                    bought = convertUSDtoEUR(bought)
+        elif (transaction_info["bought"] == "Jewel"):
+            bought = getValueJeweltoCurrency(
+                transaction_info["boughtAmount"], 
+                currency, 
+                timestamp)
         
-        for i in balances:
-            if i[0] == transaction_info["sold"]:
-                if i[1][0] >= transaction_info["soldAmount"]:
-                    sold = transaction_info["soldAmount"] * (i[1][1]/i[1][0])
-                    break
-                elif transaction_info["sold"] in dfk_contracts_tokens:
-                    #Si no hay suficiente defaultear a precio de mercado caso raro
-                    sold = queryPriceByDateJSON(transaction_info["sold"], timestamp)*transaction_info["soldAmount"]
-                    if currency == "eur":
-                        sold = convertUSDtoEUR(sold)
-                    break
+        if transaction_info["sold"] in dfk_contracts_tokens:
+            if transaction_info["sold"] in balances and balances[transaction_info["sold"]][0] > 0:
+                if balances[transaction_info["sold"]][0] >= transaction_info["soldAmount"]:
+                    sold = transaction_info["soldAmount"] * (balances[transaction_info["sold"]][1]/balances[transaction_info["sold"]][0])
+                else:
+                    value_bought = balances[transaction_info["sold"]][1]
+                    token_to_buy = transaction_info["soldAmount"] - balances[transaction_info["sold"]][0]
+
+                    if transaction_info["sold"] == "One":
+                        value_to_buy = getValueOnetoCurrency(token_to_buy, currency, timestamp)
+                    elif transaction_info["sold"] == "Jewel":
+                        value_to_buy = getValueJeweltoCurrency(token_to_buy, currency, timestamp)
+                    else:
+                        value_to_buy = 0
+                    sold = value_bought + value_to_buy
+
+            else:
+                if transaction_info["sold"] == "One":
+                    sold = getValueOnetoCurrency(transaction_info["soldAmount"], currency, timestamp)
+                elif transaction_info["sold"] == "Jewel":
+                    sold = getValueJeweltoCurrency(transaction_info["soldAmount"], currency, timestamp) 
                 else:
                     sold = bought
-        
-        if bought == 0 and sold != 0:
-            bought = sold
-        elif sold == 0 and bought != 0:
-            sold = bought
+        else:
+            sold = 0
 
         balanceChange = {
             transaction_info["sold"]: [-1*transaction_info["soldAmount"], -1*sold],
@@ -413,113 +377,108 @@ def getBalanceChange(transaction_info, timestamp, currency, balances):
         }
     
     elif transaction_info["event"] == "transfer Jewel":
-        jewel = False
-        for i in balances:
-            if i[0] == "Jewel":
-                if i[1][0] > transaction_info["amount"]:
-                    gainsJewel = (i[1][1]/i[1][0])
-                    jewel = True
-
-        
-        if jewel == False:
-            gainsJewel = queryPriceByDateJSON("Jewel", timestamp)
-            jewel = True
-            if currency == "eur":
-                gainsJewel = convertUSDtoEUR(gainsJewel)  
-
+        gainsJewel = getValueJeweltoCurrency(
+            transaction_info["amount"], 
+            currency, 
+            timestamp)
         balanceChange = {
-            "Jewel"   : [-1*transaction_info["amount"], -1*gainsJewel*transaction_info["amount"]]
+            "Jewel"   : [-1*transaction_info["amount"], -1*gainsJewel]
         }
 
     elif transaction_info["event"] == "Create Auction":
         if transaction_info["status"] != "sold":
             return { }
+        
 
-        gainsJewel = queryPriceByDateJSON("Jewel", timestamp)
-        if currency == "eur":
-            gainsJewel = convertUSDtoEUR(gainsJewel)
+        if "Jewel" in balances and balances["Jewel"][0] > 0:
+            if balances["Jewel"][0] >= transaction_info["price"]:
+                gainsJewel = transaction_info["price"] * (balances["Jewel"][1]/balances["Jewel"][0])
+            else:
+                value_bought = balances["Jewel"][1]
+                token_to_buy = transaction_info["price"] - balances["Jewel"][0]
+                value_to_buy = getValueJeweltoCurrency(token_to_buy, currency, timestamp)
+  
+                gainsJewel = value_bought + value_to_buy
+        else:
+            gainsJewel = getValueJeweltoCurrency(transaction_info["price"], currency, timestamp) 
 
         balanceChange = {
-            "Jewel": [transaction_info["price"], gainsJewel*transaction_info["price"]]
+            "Jewel": [transaction_info["price"], gainsJewel]
         }
 
     elif transaction_info["event"] == "Bought Hero":
-        jewel = False
-        for i in balances:
-            if i[0] == "Jewel":
-                if i[1][0] > transaction_info["price"]:
-                    gainsJewel = (i[1][1]/i[1][0])
-                    jewel = True
-        if jewel == False:
-            gainsJewel = queryPriceByDateJSON("Jewel", timestamp)
-            jewel = True
-            if currency == "eur":
-                gainsJewel = convertUSDtoEUR(gainsJewel)   
+        
+        if "Jewel" in balances and balances["Jewel"][0] > 0:
+            if balances["Jewel"][0] >= transaction_info["price"]:
+                gainsJewel = transaction_info["price"] * (balances["Jewel"][1]/balances["Jewel"][0])
+            else:
+                value_bought = balances["Jewel"][1]
+                token_to_buy = transaction_info["price"] - balances["Jewel"][0]
+                value_to_buy = getValueJeweltoCurrency(token_to_buy, currency, timestamp)
+  
+                gainsJewel = value_bought + value_to_buy
+        else:
+            gainsJewel = getValueJeweltoCurrency(transaction_info["price"], currency, timestamp) 
 
         balanceChange = {
-            "Jewel": [-1*transaction_info["price"], -1*gainsJewel*transaction_info["price"]]
+            "Jewel": [-1*transaction_info["price"], -1*gainsJewel]
         }
 
     elif transaction_info["event"] == "Summon Crystal":
+        if "Jewel" in balances and balances["Jewel"][0] > 0:
+            if balances["Jewel"][0] >= transaction_info["amountJewel"]:
+                gainsJewel = transaction_info["amountJewel"] * (balances["Jewel"][1]/balances["Jewel"][0])
+            else:
+                value_bought = balances["Jewel"][1]
+                token_to_buy = transaction_info["amountJewel"] - balances["Jewel"][0]
+                value_to_buy = getValueJeweltoCurrency(token_to_buy, currency, timestamp)
+  
+                gainsJewel = value_bought + value_to_buy
+        else:
+            gainsJewel = getValueJeweltoCurrency(transaction_info["amountJewel"], currency, timestamp) 
+
+        balanceChange = {
+            "Jewel": [-1*transaction_info["amountJewel"], -1*gainsJewel]
+        }
+        
+        gainsTears = queryPriceByDateJSON("Gaias Tears", timestamp)
+        if currency == "eur":
+            gainsTears = convertUSDtoEUR(gainsTears)
+        
+        
         tearAmount = transaction_info["summonerTears"] + transaction_info["assistantTears"]
-        tears = False
-        jewel = False
-        for i in balances:
-            if i[0] == "Gaias Tears":
-                if i[1][0] > tearAmount:
-                    gainsTears = (i[1][1]/i[1][0])
-                    tears = True
-            elif i[0] == "Jewel":
-                if i[1][0] > transaction_info["amountJewel"]:
-                    gainsJewel = (i[1][1]/i[1][0])
-                    jewel = True
-
-        if tears == False:
-            gainsTears = queryPriceByDateJSON("Gaias Tears", timestamp)
-            if currency == "eur":
-                gainsTears = convertUSDtoEUR(gainsTears)
-        if jewel == False:
-            gainsJewel = queryPriceByDateJSON("Jewel", timestamp)
-            jewel = True
-            if currency == "eur":
-                gainsJewel = convertUSDtoEUR(gainsJewel)   
-
-     
         
         balanceChange = {
             "Gaias Tears": [-1*tearAmount, -1*gainsTears*tearAmount],
-            "Jewel"      : [-1*transaction_info["amountJewel"], -1*gainsJewel*transaction_info["amountJewel"]]
+            "Jewel"      : [-1*transaction_info["amountJewel"], -1*gainsJewel]
         }
     
     elif transaction_info["event"] == "Start Meditation":
-        rune = False
-        jewel = False
-        for i in balances:
-            if i[0] == transaction_info["rune"]:
-                if i[1][0] > transaction_info["amountRune"]:
-                    gainsRune = (i[1][1]/i[1][0])
-                    rune = True
-            elif i[0] == "Jewel":
-                if i[1][0] > transaction_info["amountJewel"]:
-                    gainsJewel = (i[1][1]/i[1][0])
-                    jewel = True
+        if "Jewel" in balances and balances["Jewel"][0] > 0:
+            if balances["Jewel"][0] >= transaction_info["price"]:
+                gainsJewel = transaction_info["price"] * (balances["Jewel"][1]/balances["Jewel"][0])
+            else:
+                value_bought = balances["Jewel"][1]
+                token_to_buy = transaction_info["price"] - balances["Jewel"][0]
+                value_to_buy = getValueJeweltoCurrency(token_to_buy, currency, timestamp)
+  
+                gainsJewel = value_bought + value_to_buy
+        else:
+            gainsJewel = getValueJeweltoCurrency(transaction_info["price"], currency, timestamp) 
 
-        if rune == False:
-            gainsRune = queryPriceByDateJSON(transaction_info["rune"], timestamp)
-            rune = True
-            if currency == "eur":
-                gainsRune = convertUSDtoEUR(gainsRune)
-        if jewel == False:
-            gainsJewel = queryPriceByDateJSON("Jewel", timestamp)
-            jewel = True
-            if currency == "eur":
-                gainsJewel = convertUSDtoEUR(gainsJewel)   
-            
+        balanceChange = {
+            "Jewel": [-1*transaction_info["price"], -1*gainsJewel]
+        }
+
+        gainsRune = queryPriceByDateJSON(transaction_info["rune"], timestamp)
+        if currency == "eur":
+            gainsRune = convertUSDtoEUR(gainsRune)
 
         balanceChange = {
             transaction_info["rune"]   : [-1*transaction_info["amountRune"], -1*gainsRune*transaction_info["amountRune"]],
             "Jewel"                    : [-1*transaction_info["amountJewel"], -1*gainsJewel]
         }
+    
     return balanceChange
 
 def queryHeroLevel(id, block):
@@ -578,13 +537,13 @@ def queryPriceByDateJSON(item, date):
     priceJSON = open(f"items/{symbol}.json")
     priceData = json.load(priceJSON)
     if date == "last":
-        return float(priceData["1641007206"])
+        return float(priceData["1640660400"])
     for key, value in priceData.items():
         if date>int(key):
             item_price = float(value)
-            return round(item_price, 5)
+            break
     if item_price == 0:
-        return float(priceData["1641007206"])
+        return float(priceData["1640660400"])
     return round(item_price, 5)
 
 def get_transactions_count(address, tx_type, endpoint):

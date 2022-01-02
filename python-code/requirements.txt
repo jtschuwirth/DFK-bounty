@@ -1,0 +1,6 @@
+DateTime==4.3
+Flask[async]==2.0.2
+Flask-Cors==3.0.10
+pycoingecko==2.2.0
+pyhmy==20.5.20
+web3==5.25.0
